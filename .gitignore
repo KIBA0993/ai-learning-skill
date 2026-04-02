@@ -1,0 +1,18 @@
+# Generated learning outputs (personal data — not committed)
+*.env
+*.env.*
+.env.local
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor files
+.cursor/
+.vscode/settings.json
+*.swp
+*.swo
+
+# Personal learning outputs (stored in ~/.gstack/learning/ outside this repo)
+# Do NOT add curriculum/*.md or quiz-*.md here — they live in ~/.gstack/learning/
