@@ -16,3 +16,7 @@
 
 # Personal learning outputs (stored in ~/.gstack/learning/ outside this repo)
 # Do NOT add curriculum/*.md or quiz-*.md here — they live in ~/.gstack/learning/
+
+# If you ever copy learning files into this repo by mistake — never commit credentials
+smtp-config.json
+.user-profile.json

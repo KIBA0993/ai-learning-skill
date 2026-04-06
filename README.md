@@ -1,104 +1,128 @@
 # AI Learning Skill
 
-A Cursor/Claude agent skill that generates personalized AI learning curricula anchored to real products.
+An agent skill for **Cursor**, **Claude Code**, and other Claude-powered tools. It turns a product you care about into a **15-day, role-specific AI learning path** you can actually finish—mobile-friendly HTML, quizzes, and optional daily email delivery.
 
-## What It Does
+---
 
-Give it a product you care about (e.g., "Cursor", "Perplexity", "InsForge") and your job function. It will:
+## 1. What is AI Learning (this skill)?
 
-1. **Reverse-engineer the product's AI tech stack** using live web research
-2. **Map the competitive landscape** (key competitors, differentiators, user sentiment)
-3. **Generate a 15-session learning curriculum** tailored to your role
-4. **Include quizzes after every session** — 2 multiple-choice (self-graded) + 1 open-ended (with model answer)
-5. **Write everything to a markdown file** you can read anywhere, anytime
+**AI Learning** here means: a structured curriculum that teaches you how a *real* AI product works—its stack, competitors, and how your job function fits—using **live research**, **curated sources**, and **daily-sized sessions** (about 15–20 minutes each).
 
-## Supported Job Functions
+You choose:
 
-| Role | Quiz Focus |
-|---|---|
-| Product Manager | Business tradeoffs, stakeholder communication, metric selection |
-| Software Engineer | Debugging, implementation, system design, performance |
-| UX Designer | User-facing behavior, error states, trust signals, interaction patterns |
-| Operations / Program Manager | Rollout planning, risk mitigation, cross-team coordination |
-| Data Analyst | Metrics, data quality, evaluation methodology, bias detection |
+- A **product** (e.g. Cursor, Notion AI, an internal or niche tool)
+- A **job function** (PM, engineer, UX, ops, analyst)
 
-## How to Use
+The skill produces materials grounded in that product—not a generic “intro to AI” course.
 
-### In Cursor (recommended)
+---
 
-1. Attach `SKILL.md` to your Cursor chat using the `@` file reference or by placing it in `~/.agents/skills/ai-learning/SKILL.md`
-2. Type: `@SKILL.md generate my learning curriculum`
-3. Follow the prompts (select your role → enter a product name)
-4. Your curriculum is saved to `~/.gstack/learning/`
+## 2. Highlights
 
-### Manually (any Claude interface)
+| Feature | What you get |
+|--------|----------------|
+| **Product-anchored curriculum** | Tech stack + competitive snapshot tied to *your* product |
+| **15 per-day HTML sessions** | One file per day; readable on phone or desktop |
+| **Role-tuned depth** | Vocabulary, density, and examples adapt to PM / engineer / UX / ops / analyst |
+| **Learner profile + calibration** | Short questionnaire + quiz to tune “how deep” the content goes |
+| **Quizzes** | Multiple-choice + open-ended prompts with model answers |
+| **Dynamic day summaries** | Each day’s “what today is about” reflects real session content |
+| **Curriculum map** | Table of modules with Focus lines derived from your session goals |
+| **“Coming up next”** | Preview of the next day at the bottom of each HTML page |
+| **Source diversity** | Prioritizes neutral / third-party sources; product docs used sparingly; enough sources to *learn*, not a fixed count |
+| **Manifest + optional email** | `manifest.json` drives which day to open; macOS users can set up **daily SMTP email** (see `SKILL.md` Step 5.5) |
+| **Preferences you can change** | Full profile or delivery-only updates without regenerating everything by hand |
 
-1. Open `SKILL.md`
-2. Copy the full contents into a Claude conversation
-3. Follow the prompts
+Outputs are written under **`~/.gstack/learning/`** on your machine (not inside this repo), so your paths and profile stay local.
 
-## Output Files
+---
 
-Generated files are saved to `~/.gstack/learning/` (outside this repo — personal data):
+## 3. Quick start (install)
 
-```
-~/.gstack/learning/
-├── {product}-{role}-curriculum.md    # Your full 15-session curriculum
-└── quiz-{product}-{role}-{timestamp}.md  # Blank quiz tracker
-```
+1. **Clone or copy this repository** (this folder contains `SKILL.md`, the skill definition).
 
-## Curriculum Structure
+2. **Install the skill where your agent looks for skills**, for example:
+   - Cursor: add or symlink so the skill is available (e.g. `~/.agents/skills/ai-learning/SKILL.md` or attach `SKILL.md` per chat—see your product’s skill docs).
+   - Claude Code / similar: follow your tool’s “project skill” or “import SKILL.md” workflow.
 
-```
-{product}-{role}-curriculum.md
-├── Tech Stack at a Glance
-├── Competitive Snapshot
-├── Module 1: AI Technology Stack (Days 1–3)
-├── Module 2: Competitive Landscape (Days 4–5)
-├── Module 3: Your Role at This Product Type (Days 6–8)
-├── Module 4: How to Build This (Days 9–12)
-└── Module 5: Day-in-the-Life + Capstone Quiz (Days 13–15)
-```
+3. **Ensure output directory exists** (optional; the skill creates it if possible):
 
-Each session follows a standard template:
-- **What you'll learn** — one-sentence summary
-- **Key concepts** — 3 plain-English definitions
-- **Sources** — linked free resources with estimated read/watch time
-- **How this applies to your role** — concrete connection to your job
-- **Quiz** — 2 MC (with `<details>` answer spoilers) + 1 open-ended (with model answer)
+   ```bash
+   mkdir -p ~/.gstack/learning
+   ```
 
-## Source Quality
+4. **Open a new chat** and attach or invoke the skill (see §4).
 
-The skill uses a 4-layer search strategy:
-- **Layer 1** — Product intelligence (identify the tech stack)
-- **Layer 2** — Technology content per identified tech × role lens
-- **Layer 3** — Job function responsibilities at this type of company
-- **Layer 4** — Competitive landscape
+5. **First run**: answer the profile questions (AI level, calibration, daily minutes, format, **delivery email & time** if you want email later). Then pick role and product when prompted.
 
-Sources are filtered for recency (< 24 months preferred), quality (concrete examples, primary sources), and session length (< 20 min target). When external sources are limited, the skill uses model knowledge — clearly labeled as `[Model Knowledge]`.
+6. **After generation**, open the printed paths under `~/.gstack/learning/` (e.g. `*-day-01.html`). For **daily email** on macOS, follow the **Step 5.5** block in `SKILL.md`: create `~/.gstack/learning/.smtp-config.json` with **your** mail provider’s SMTP settings (use an **app password** for Gmail—never commit that file).
 
-## Design & Architecture
+---
 
-This skill was designed using the `/office-hours` and `/plan-eng-review` gstack skills:
-- Design doc: `~/.gstack/projects/ai-learning/`
-- Test plan: `~/.gstack/projects/ai-learning/` (7 validation test cases)
-- Eng review: CLEARED — 6 architecture issues resolved before implementation
+## 4. How to run the skill & change preferences
 
-## V1 Scope
+### Run / generate a curriculum
 
-V1 (this skill) covers:
-- ✅ Product-centric curriculum generation
-- ✅ 5 job functions with role-differentiated quizzes
-- ✅ Model knowledge fallback for closed-source products
-- ✅ Hybrid quiz format (2 MC + 1 open-ended)
+- In Cursor: attach **`SKILL.md`** (e.g. `@` file) and ask to run the AI Learning skill or generate a curriculum for a product + role.
+- In any Claude UI: paste or attach the full **`SKILL.md`** and follow the steps from the top.
 
-## V2 Roadmap (not yet built)
+Typical flow: **Step 0 (profile)** → **Step 1 (role)** → **product name** → research & generation → files under `~/.gstack/learning/`.
 
-- Adaptive loop (quiz results change next session's content)
-- Survey-based entry (no product needed — start from experience level)
-- Bilingual output (English/Chinese)
-- Engineering sub-roles (ML Engineer, MLOps, Data Engineer)
-- `--grade` flag for AI feedback on open-ended answers
+### Change preferences
+
+| What you want | What to say (examples) |
+|----------------|-------------------------|
+| Full profile (AI level, time, format, **and** delivery) | `update my profile` or `change my preferences` |
+| **Only** email or daily send time | `update delivery`, `change delivery email`, `change delivery time`, `update email`, `change my delivery` |
+
+The skill updates **`~/.gstack/learning/.user-profile.json`** (local file). It does **not** store SMTP passwords in the profile—those belong only in **`~/.gstack/learning/.smtp-config.json`**, which you should **never** commit to git.
+
+---
+
+## 5. More for users & adoption
+
+### Who it’s for
+
+- **ICs and leads** who need to ramp on a specific AI product fast.
+- **Builders** who learn better from a structured arc than from random bookmarks.
+- **Teams** who want a **shared vocabulary** around one product’s AI stack.
+
+### What “good” looks like
+
+- You finish **Day 1** in one sitting and know what Days 2–3 cover.
+- You can explain the product’s **tech stack** and **one real competitor tradeoff** to a colleague.
+- Quizzes surface gaps; you revisit sources or ask follow-up questions in the same chat.
+
+### Privacy & safety
+
+- **No API keys** belong in this repo. Research uses normal web tools as described in `SKILL.md`.
+- **Personal data** (profile, quizzes, generated HTML) lives under **`~/.gstack/learning/`**—add that path to `.gitignore` elsewhere if you copy artifacts into a project.
+- Treat **`.smtp-config.json`** like a secret: local-only, strong app passwords, not shared.
+
+### Troubleshooting (short)
+
+| Issue | Try |
+|--------|-----|
+| Profile keeps re-asking questions | Check write permissions on `~/.gstack/learning/`. |
+| Email not arriving | Confirm SMTP file filled in, run `python3 ~/.gstack/learning/deliver.py` once, check `delivery.log`. |
+| Day seems wrong | Manifest uses `start_date`; regenerate curriculum or adjust dates per `SKILL.md`. |
+
+### Roadmap & deeper notes
+
+- See **`TODOS.md`** for deferred ideas (e.g. hosted URL delivery, cross-platform schedulers).
+- **`SKILL.md`** is the source of truth for behavior, prompts, and file formats.
+
+---
+
+## Output layout (typical)
+
+Under `~/.gstack/learning/` (exact names depend on product/role slug):
+
+- `*-day-01.html` … `*-day-15.html` — daily sessions  
+- `*-manifest.json` — scheduler / delivery index  
+- Optional: `*.md` curriculum reference, quiz tracker
+
+---
 
 ## License
 
