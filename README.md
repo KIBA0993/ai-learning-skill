@@ -79,7 +79,7 @@ The skill updates **`~/.gstack/learning/.user-profile.json`** (local file). It d
 
 ---
 
-## 5. More for users & adoption
+## 5. Usage
 
 ### Who it’s for
 
