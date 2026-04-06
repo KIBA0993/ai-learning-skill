@@ -96,18 +96,8 @@ The skill updates **`~/.gstack/learning/.user-profile.json`** (local file). It d
 ### Privacy & safety
 
 - **No API keys** belong in this repo. Research uses normal web tools as described in `SKILL.md`.
-- **Personal data** (profile, quizzes, generated HTML) lives under **`~/.gstack/learning/`**—add that path to `.gitignore` elsewhere if you copy artifacts into a project.
 - Treat **`.smtp-config.json`** like a secret: local-only, strong app passwords, not shared.
 
-### Troubleshooting (short)
-
-| Issue | Try |
-|--------|-----|
-| Profile keeps re-asking questions | Check write permissions on `~/.gstack/learning/`. |
-| Email not arriving | Confirm SMTP file filled in, run `python3 ~/.gstack/learning/deliver.py` once, check `delivery.log`. |
-| Day seems wrong | Manifest uses `start_date`; regenerate curriculum or adjust dates per `SKILL.md`. |
-
-**Source of truth:** behavior, prompts, and file formats are defined in **`SKILL.md`**.
 
 ---
 
