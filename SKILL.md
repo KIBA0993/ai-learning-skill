@@ -20,7 +20,7 @@ quizzes after every session.
 - "Generate my AI learning curriculum" / "Create a product-centric AI curriculum"
 - "Build me a 15-day learning plan for **[product]**" (as a **[role]**)
 - "I want to learn **[product]** from a **[PM / engineer / UX / ops / analyst]** lens"
-- "@SKILL.md" (or project skill) + ask to generate the curriculum
+- `@~/.agents/skills/ai-learning/SKILL.md` / `@SKILL.md` (or project skill) + ask to generate the curriculum
 
 **Update preferences (mid-session or later)**
 
@@ -35,7 +35,7 @@ quizzes after every session.
 
 **If that directory cannot be created** (permissions, read-only home, etc.): SETUP falls back to **`$(pwd)`** — the agent's current working directory — and must print a warning so the user knows where files landed. Profile write-back has the same fallback (see Step 0 error handling).
 
-Installing this repo **only** copies `SKILL.md` into your skills folder; it does **not** require a pre-existing `~/.gstack` tree — the skill creates **`~/.gstack/learning`** on first run when possible.
+**Recommended install path for the skill file:** **`~/.agents/skills/ai-learning/SKILL.md`** (create the directory if needed). This matches the common Cursor / OpenClaw agents layout. Cloning the GitHub repository into `~/.agents/skills/ai-learning` is enough — that folder must contain `SKILL.md` at its root. Installing the skill does **not** require a pre-existing `~/.gstack` tree; the skill creates **`~/.gstack/learning`** for outputs on first run when possible.
 
 ---
 

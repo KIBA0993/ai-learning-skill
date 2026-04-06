@@ -33,25 +33,45 @@ The skill produces materials grounded in that product—not a generic “intro t
 | **Manifest + optional email** | `manifest.json` drives which day to open; macOS users can set up **daily SMTP email** (see `SKILL.md` Step 5.5) |
 | **Preferences you can change** | Full profile or delivery-only updates without regenerating everything by hand |
 
-Outputs are written under **`~/.gstack/learning/`** on your machine (**`~` = your home folder**, e.g. `/Users/you` on macOS — **not** the filesystem root `/`). Nothing is required inside this git repo besides `SKILL.md`.
+Outputs are written under **`~/.gstack/learning/`** on your machine (**`~` = your home folder**, e.g. `/Users/you` on macOS — **not** the filesystem root `/`). The **skill definition** lives under **`~/.agents/skills/ai-learning/`** (see below).
 
 ---
 
 ## 3. Quick start (install)
 
-1. **Clone or copy this repository** (this folder contains `SKILL.md`, the skill definition).
+**Canonical skill directory:** `~/.agents/skills/ai-learning/`  
+The agent should load **`~/.agents/skills/ai-learning/SKILL.md`**.
 
-2. **Install the skill where your agent looks for skills**, for example:
-   - Cursor: add or symlink so the skill is available (e.g. `~/.agents/skills/ai-learning/SKILL.md` or attach `SKILL.md` per chat—see your product’s skill docs).
-   - Claude Code / similar: follow your tool’s “project skill” or “import SKILL.md” workflow.
+### Option A — Clone this repo into the canonical path (recommended)
 
-3. **Output folder:** You usually **do not need** to create anything manually. On first run the skill runs `mkdir -p ~/.gstack/learning`. If your home directory cannot create that path (permissions, corporate policy), the skill **falls back to the current working directory** and should tell you where files were written.
+```bash
+mkdir -p ~/.agents/skills
+git clone https://github.com/KIBA0993/ai-learning-skill.git ~/.agents/skills/ai-learning
+```
 
-4. **Open a new chat** and attach or invoke the skill (see §4).
+After this, `SKILL.md` is at `~/.agents/skills/ai-learning/SKILL.md`.
 
-5. **First run**: answer the profile questions (AI level, calibration, daily minutes, format, **delivery email & time** if you want email later). Then pick role and product when prompted.
+### Option B — You already cloned elsewhere
 
-6. **After generation**, open the printed paths under `~/.gstack/learning/` (e.g. `*-day-01.html`). For **daily email** on macOS, follow the **Step 5.5** block in `SKILL.md`: create `~/.gstack/learning/.smtp-config.json` with **your** mail provider’s SMTP settings (use an **app password** for Gmail—never commit that file).
+Symlink or copy only the skill file:
+
+```bash
+mkdir -p ~/.agents/skills/ai-learning
+ln -sf /full/path/to/your/clone/SKILL.md ~/.agents/skills/ai-learning/SKILL.md
+```
+
+### Cursor / Claude Code
+
+- Point your skill picker or rules at **`~/.agents/skills/ai-learning/SKILL.md`**, or in chat use **`@~/.agents/skills/ai-learning/SKILL.md`** (if your editor supports path-based @).
+- Other tools: follow their “add a skill” docs using the same path.
+
+### Outputs (separate from the skill install)
+
+You usually **do not need** to create **`~/.gstack/learning`** manually. On first run the skill runs `mkdir -p ~/.gstack/learning`. If that fails, it **falls back to the current working directory** and should warn you.
+
+**First chat:** answer the profile questions (AI level, calibration, daily minutes, format, **delivery email & time** if you want email later). Then choose role and product.
+
+**After generation**, open files under `~/.gstack/learning/` (e.g. `*-day-01.html`). For **daily email** on macOS, see **`SKILL.md` Step 5.5** — use **`~/.gstack/learning/.smtp-config.json`** (never commit it).
 
 ---
 
@@ -68,7 +88,7 @@ Exact wording is **not** required — same intent is enough. The canonical list 
 | "Run / use the **AI Learning skill**" | Starts from Step 0 |
 | "**Generate** my AI learning **curriculum**" | Same |
 | "**Build a 15-day** learning plan for **{product}** as a **{role}**" | Same (product + role in one line) |
-| Attach **`@SKILL.md`** + "generate curriculum for **{product}**" | Same |
+| Attach **`@~/.agents/skills/ai-learning/SKILL.md`** (or **`@SKILL.md`** in a project that contains it) + "generate curriculum for **{product}**" | Same |
 
 **Preferences**
 
@@ -79,8 +99,8 @@ Exact wording is **not** required — same intent is enough. The canonical list 
 
 ### Run / generate a curriculum
 
-- In Cursor: attach **`SKILL.md`** (e.g. `@` file) and use a **trigger phrase** above or ask to generate a curriculum for a product + role.
-- In any Claude UI: paste or attach the full **`SKILL.md`** and follow the steps from the top.
+- In Cursor: attach **`~/.agents/skills/ai-learning/SKILL.md`** (or `@` that path) and use a **trigger phrase** above, or ask to generate a curriculum for a product + role.
+- In any Claude UI: paste or attach the full contents of **`~/.agents/skills/ai-learning/SKILL.md`** and follow the steps from the top.
 
 Typical flow: **Step 0 (profile)** → **Step 1 (role)** → **product name** → research & generation → files under `~/.gstack/learning/` (or the fallback directory if creation failed).
 
