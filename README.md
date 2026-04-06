@@ -107,10 +107,7 @@ The skill updates **`~/.gstack/learning/.user-profile.json`** (local file). It d
 | Email not arriving | Confirm SMTP file filled in, run `python3 ~/.gstack/learning/deliver.py` once, check `delivery.log`. |
 | Day seems wrong | Manifest uses `start_date`; regenerate curriculum or adjust dates per `SKILL.md`. |
 
-### Roadmap & deeper notes
-
-- See **`TODOS.md`** for deferred ideas (e.g. hosted URL delivery, cross-platform schedulers).
-- **`SKILL.md`** is the source of truth for behavior, prompts, and file formats.
+**Source of truth:** behavior, prompts, and file formats are defined in **`SKILL.md`**.
 
 ---
 

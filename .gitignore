@@ -20,3 +20,6 @@
 # If you ever copy learning files into this repo by mistake — never commit credentials
 smtp-config.json
 .user-profile.json
+
+# Internal backlog — keep local only (not published with the repo)
+TODOS.md
