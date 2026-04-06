@@ -21,7 +21,9 @@ quizzes after every session.
 
 ## When to use this skill (trigger phrases)
 
-**Hosts (Cursor, Claude Code, etc.):** Route to this skill when the user intent matches any of these — natural language is fine; exact wording is not required.
+**Hosts (Cursor, Claude Code, OpenClaw, etc.):** Route to this skill when the user intent matches any of these — natural language is fine; exact wording is not required.
+
+**OpenClaw + Telegram:** Some environments **cannot spawn a dedicated ACP thread** for skills in a Telegram channel. If the user sees that limitation, continue the **same** conversation: run Step 0 onward from this file without requiring a separate skill thread. Full file generation needs a host with filesystem access (desktop agent, Cursor, etc.).
 
 **Start or generate a curriculum**
 
