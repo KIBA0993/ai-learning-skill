@@ -33,7 +33,7 @@ The skill produces materials grounded in that product—not a generic “intro t
 | **Manifest + optional email** | `manifest.json` drives which day to open; macOS users can set up **daily SMTP email** (see `SKILL.md` Step 5.5) |
 | **Preferences you can change** | Full profile or delivery-only updates without regenerating everything by hand |
 
-Outputs are written under **`~/.gstack/learning/`** on your machine (not inside this repo), so your paths and profile stay local.
+Outputs are written under **`~/.gstack/learning/`** on your machine (**`~` = your home folder**, e.g. `/Users/you` on macOS — **not** the filesystem root `/`). Nothing is required inside this git repo besides `SKILL.md`.
 
 ---
 
@@ -45,11 +45,7 @@ Outputs are written under **`~/.gstack/learning/`** on your machine (not inside 
    - Cursor: add or symlink so the skill is available (e.g. `~/.agents/skills/ai-learning/SKILL.md` or attach `SKILL.md` per chat—see your product’s skill docs).
    - Claude Code / similar: follow your tool’s “project skill” or “import SKILL.md” workflow.
 
-3. **Ensure output directory exists** (optional; the skill creates it if possible):
-
-   ```bash
-   mkdir -p ~/.gstack/learning
-   ```
+3. **Output folder:** You usually **do not need** to create anything manually. On first run the skill runs `mkdir -p ~/.gstack/learning`. If your home directory cannot create that path (permissions, corporate policy), the skill **falls back to the current working directory** and should tell you where files were written.
 
 4. **Open a new chat** and attach or invoke the skill (see §4).
 
@@ -61,12 +57,32 @@ Outputs are written under **`~/.gstack/learning/`** on your machine (not inside 
 
 ## 4. How to run the skill & change preferences
 
+### Trigger phrases (for you and for skill routing)
+
+Exact wording is **not** required — same intent is enough. The canonical list also lives at the top of **`SKILL.md`** under *When to use this skill*.
+
+**Start a curriculum**
+
+| Example says… | … |
+|----------------|---|
+| "Run / use the **AI Learning skill**" | Starts from Step 0 |
+| "**Generate** my AI learning **curriculum**" | Same |
+| "**Build a 15-day** learning plan for **{product}** as a **{role}**" | Same (product + role in one line) |
+| Attach **`@SKILL.md`** + "generate curriculum for **{product}**" | Same |
+
+**Preferences**
+
+| Intent | Example phrases |
+|--------|------------------|
+| Change everything (level, time, format, delivery) | `update my profile`, `change my preferences` |
+| Email or daily send time only | `update delivery`, `change delivery email`, `change delivery time`, `update email`, `change my delivery` |
+
 ### Run / generate a curriculum
 
-- In Cursor: attach **`SKILL.md`** (e.g. `@` file) and ask to run the AI Learning skill or generate a curriculum for a product + role.
+- In Cursor: attach **`SKILL.md`** (e.g. `@` file) and use a **trigger phrase** above or ask to generate a curriculum for a product + role.
 - In any Claude UI: paste or attach the full **`SKILL.md`** and follow the steps from the top.
 
-Typical flow: **Step 0 (profile)** → **Step 1 (role)** → **product name** → research & generation → files under `~/.gstack/learning/`.
+Typical flow: **Step 0 (profile)** → **Step 1 (role)** → **product name** → research & generation → files under `~/.gstack/learning/` (or the fallback directory if creation failed).
 
 ### Change preferences
 

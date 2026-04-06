@@ -10,6 +10,35 @@ quizzes after every session.
 
 ---
 
+## When to use this skill (trigger phrases)
+
+**Hosts (Cursor, Claude Code, etc.):** Route to this skill when the user intent matches any of these — natural language is fine; exact wording is not required.
+
+**Start or generate a curriculum**
+
+- "Run the AI Learning skill" / "Use the AI Learning skill"
+- "Generate my AI learning curriculum" / "Create a product-centric AI curriculum"
+- "Build me a 15-day learning plan for **[product]**" (as a **[role]**)
+- "I want to learn **[product]** from a **[PM / engineer / UX / ops / analyst]** lens"
+- "@SKILL.md" (or project skill) + ask to generate the curriculum
+
+**Update preferences (mid-session or later)**
+
+- **Full profile** (AI level, daily time, format, delivery): `update my profile`, `change my preferences`
+- **Delivery only** (email + send time): `update delivery`, `change delivery email`, `change delivery time`, `update email`, `change my delivery`
+
+---
+
+## Where files go (`~/.gstack/learning`)
+
+**Default output directory** is **`$HOME/.gstack/learning`** (on your machine: `~/.gstack/learning`, **not** `/` at the disk root). The SETUP step runs `mkdir -p` — on a normal Mac/Linux/Windows (Git Bash/WSL) install **the folder is created automatically** the first time if it does not exist.
+
+**If that directory cannot be created** (permissions, read-only home, etc.): SETUP falls back to **`$(pwd)`** — the agent's current working directory — and must print a warning so the user knows where files landed. Profile write-back has the same fallback (see Step 0 error handling).
+
+Installing this repo **only** copies `SKILL.md` into your skills folder; it does **not** require a pre-existing `~/.gstack` tree — the skill creates **`~/.gstack/learning`** on first run when possible.
+
+---
+
 ## SETUP
 
 ```bash
