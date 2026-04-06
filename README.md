@@ -65,6 +65,16 @@ ln -sf /full/path/to/your/clone/SKILL.md ~/.agents/skills/ai-learning/SKILL.md
 - Point your skill picker or rules at **`~/.agents/skills/ai-learning/SKILL.md`**, or in chat use **`@~/.agents/skills/ai-learning/SKILL.md`** (if your editor supports path-based @).
 - Other tools: follow their “add a skill” docs using the same path.
 
+### OpenClaw (ClawHub-style install)
+
+`SKILL.md` includes YAML **frontmatter** (`name: ai-learning`, `description`, …) so OpenClaw and similar tools can parse the skill slug.
+
+- **GitHub URL:** `https://github.com/KIBA0993/ai-learning-skill`  
+- **Install from the repository root** — `SKILL.md` is at the **top level** of the repo. Do **not** add a subfolder path (e.g. avoid `.../ai-learning-skill/some/nested/folder` unless you mirror that layout).
+- **Slug / name:** `ai-learning` (must stay lowercase; matches the `name` field in frontmatter).
+
+If the installer still says **invalid slug**, use **manual clone** (Option A above) or paste the repo URL **without** a subfolder.
+
 ### Outputs (same directory as the skill)
 
 On first run the skill runs `mkdir -p ~/.agents/skills/ai-learning`. If that path cannot be created, it **falls back to the current working directory** and should warn you.

@@ -1,3 +1,12 @@
+---
+name: ai-learning
+description: "Product-anchored 15-day AI learning curriculum (per-day HTML, quizzes, manifest) for PM / engineer / UX / ops / analyst roles; learner profile + optional macOS daily email."
+version: 1.0.0
+metadata:
+  openclaw:
+    homepage: https://github.com/KIBA0993/ai-learning-skill
+---
+
 # AI Learning Skill — Product-Centric Curriculum Generator
 
 **What this skill does:** You give it a real AI product you care about (e.g., "Cursor",
