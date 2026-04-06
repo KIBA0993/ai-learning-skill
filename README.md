@@ -33,7 +33,7 @@ The skill produces materials grounded in that product—not a generic “intro t
 | **Manifest + optional email** | `manifest.json` drives which day to open; macOS users can set up **daily SMTP email** (see `SKILL.md` Step 5.5) |
 | **Preferences you can change** | Full profile or delivery-only updates without regenerating everything by hand |
 
-Outputs are written under **`~/.gstack/learning/`** on your machine (**`~` = your home folder**, e.g. `/Users/you` on macOS — **not** the filesystem root `/`). The **skill definition** lives under **`~/.agents/skills/ai-learning/`** (see below).
+Everything lives in one place: **`~/.agents/skills/ai-learning/`** (**`~` = your home folder**, e.g. `/Users/you` on macOS — **not** `/` at the disk root). That folder holds **`SKILL.md`** **and** generated files (HTML days, manifest, profile, delivery scripts, etc.).
 
 ---
 
@@ -65,13 +65,13 @@ ln -sf /full/path/to/your/clone/SKILL.md ~/.agents/skills/ai-learning/SKILL.md
 - Point your skill picker or rules at **`~/.agents/skills/ai-learning/SKILL.md`**, or in chat use **`@~/.agents/skills/ai-learning/SKILL.md`** (if your editor supports path-based @).
 - Other tools: follow their “add a skill” docs using the same path.
 
-### Outputs (separate from the skill install)
+### Outputs (same directory as the skill)
 
-You usually **do not need** to create **`~/.gstack/learning`** manually. On first run the skill runs `mkdir -p ~/.gstack/learning`. If that fails, it **falls back to the current working directory** and should warn you.
+On first run the skill runs `mkdir -p ~/.agents/skills/ai-learning`. If that path cannot be created, it **falls back to the current working directory** and should warn you.
 
 **First chat:** answer the profile questions (AI level, calibration, daily minutes, format, **delivery email & time** if you want email later). Then choose role and product.
 
-**After generation**, open files under `~/.gstack/learning/` (e.g. `*-day-01.html`). For **daily email** on macOS, see **`SKILL.md` Step 5.5** — use **`~/.gstack/learning/.smtp-config.json`** (never commit it).
+**After generation**, open files under **`~/.agents/skills/ai-learning/`** (e.g. `*-day-01.html`). For **daily email** on macOS, see **`SKILL.md` Step 5.5** — use **`~/.agents/skills/ai-learning/.smtp-config.json`** (never commit it).
 
 ---
 
@@ -102,7 +102,7 @@ Exact wording is **not** required — same intent is enough. The canonical list 
 - In Cursor: attach **`~/.agents/skills/ai-learning/SKILL.md`** (or `@` that path) and use a **trigger phrase** above, or ask to generate a curriculum for a product + role.
 - In any Claude UI: paste or attach the full contents of **`~/.agents/skills/ai-learning/SKILL.md`** and follow the steps from the top.
 
-Typical flow: **Step 0 (profile)** → **Step 1 (role)** → **product name** → research & generation → files under `~/.gstack/learning/` (or the fallback directory if creation failed).
+Typical flow: **Step 0 (profile)** → **Step 1 (role)** → **product name** → research & generation → files under **`~/.agents/skills/ai-learning/`** (or the fallback directory if creation failed).
 
 ### Change preferences
 
@@ -111,7 +111,7 @@ Typical flow: **Step 0 (profile)** → **Step 1 (role)** → **product name** �
 | Full profile (AI level, time, format, **and** delivery) | `update my profile` or `change my preferences` |
 | **Only** email or daily send time | `update delivery`, `change delivery email`, `change delivery time`, `update email`, `change my delivery` |
 
-The skill updates **`~/.gstack/learning/.user-profile.json`** (local file). It does **not** store SMTP passwords in the profile—those belong only in **`~/.gstack/learning/.smtp-config.json`**, which you should **never** commit to git.
+The skill updates **`~/.agents/skills/ai-learning/.user-profile.json`** (local file). It does **not** store SMTP passwords in the profile—those belong only in **`~/.agents/skills/ai-learning/.smtp-config.json`**, which you should **never** commit to git.
 
 ---
 
@@ -139,7 +139,7 @@ The skill updates **`~/.gstack/learning/.user-profile.json`** (local file). It d
 
 ## Output layout (typical)
 
-Under `~/.gstack/learning/` (exact names depend on product/role slug):
+Under **`~/.agents/skills/ai-learning/`** (exact names depend on product/role slug):
 
 - `*-day-01.html` … `*-day-15.html` — daily sessions  
 - `*-manifest.json` — scheduler / delivery index  

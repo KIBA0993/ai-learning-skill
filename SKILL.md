@@ -29,20 +29,25 @@ quizzes after every session.
 
 ---
 
-## Where files go (`~/.gstack/learning`)
+## Where files go (`~/.agents/skills/ai-learning`)
 
-**Default output directory** is **`$HOME/.gstack/learning`** (on your machine: `~/.gstack/learning`, **not** `/` at the disk root). The SETUP step runs `mkdir -p` — on a normal Mac/Linux/Windows (Git Bash/WSL) install **the folder is created automatically** the first time if it does not exist.
+**Single canonical directory:** **`$HOME/.agents/skills/ai-learning`** (on your machine: `~/.agents/skills/ai-learning`, **not** `/` at the disk root).
+
+- **`SKILL.md`** lives here (clone or copy the repository into this folder).
+- **Generated outputs** — per-day HTML, markdown curriculum, quiz files, `manifest.json`, `.user-profile.json`, `deliver.py`, `.smtp-config.json`, delivery logs — are written **in the same directory**, alongside `SKILL.md`.
+
+The SETUP step runs `mkdir -p` on this path — on a normal install the folder is created when needed.
 
 **If that directory cannot be created** (permissions, read-only home, etc.): SETUP falls back to **`$(pwd)`** — the agent's current working directory — and must print a warning so the user knows where files landed. Profile write-back has the same fallback (see Step 0 error handling).
 
-**Recommended install path for the skill file:** **`~/.agents/skills/ai-learning/SKILL.md`** (create the directory if needed). This matches the common Cursor / OpenClaw agents layout. Cloning the GitHub repository into `~/.agents/skills/ai-learning` is enough — that folder must contain `SKILL.md` at its root. Installing the skill does **not** require a pre-existing `~/.gstack` tree; the skill creates **`~/.gstack/learning`** for outputs on first run when possible.
+**`.gitignore`:** If this repo is cloned into `~/.agents/skills/ai-learning`, keep generated artifacts and credentials out of git — use the repository's tracked `.gitignore` (or append the same patterns locally).
 
 ---
 
 ## SETUP
 
 ```bash
-LEARNING_DIR="$HOME/.gstack/learning"
+LEARNING_DIR="$HOME/.agents/skills/ai-learning"
 mkdir -p "$LEARNING_DIR" 2>/dev/null || LEARNING_DIR="$(pwd)"
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 echo "Output directory: $LEARNING_DIR"
@@ -57,8 +62,8 @@ Before anything else, check whether the user has a saved learner profile. This p
 tailors vocabulary depth, content density, and code example presence for all 15 sessions.
 
 ```bash
-PROFILE_FILE="$HOME/.gstack/learning/.user-profile.json"
-mkdir -p "$HOME/.gstack/learning" 2>/dev/null || true
+PROFILE_FILE="$HOME/.agents/skills/ai-learning/.user-profile.json"
+mkdir -p "$HOME/.agents/skills/ai-learning" 2>/dev/null || true
 ```
 
 ### If the profile file exists
@@ -237,14 +242,14 @@ version 2. When `version` is missing or < 1: treat as stale, re-run full questio
 **Write-back verification:** After writing, attempt to read back `$PROFILE_FILE` and parse it.
 If the file is missing or fails to parse after the write:
 > "Note: Could not save your profile to disk — you'll be asked these questions again next
-> run. Check write permissions on `~/.gstack/learning/`."
+> run. Check write permissions on `~/.agents/skills/ai-learning/`."
 This does not block curriculum generation — warn and continue.
 
 **Profile error handling:**
 - If profile exists but fails JSON parse: treat as first run, re-run questionnaire, overwrite.
 - If `version` field missing or < 1: treat as stale, re-run questionnaire, overwrite.
 - If `version` == 1 and delivery fields missing: ask Q4+Q5 only, write back as version 2.
-- If `~/.gstack/learning/` cannot be created: use `$(pwd)` as fallback, print warning.
+- If `~/.agents/skills/ai-learning/` cannot be created: use `$(pwd)` as fallback, print warning.
 
 ---
 
@@ -1616,12 +1621,12 @@ run Q4 and Q5 now (same questions as Step 0), save to profile, then continue.
 
 Resolve absolute paths (launchd does not expand `~`):
 ```bash
-DELIVER_SCRIPT="$HOME/.gstack/learning/deliver.py"
+DELIVER_SCRIPT="$HOME/.agents/skills/ai-learning/deliver.py"
 PYTHON3_PATH=$(which python3)
 ```
 
 Write `$DELIVER_SCRIPT` with the following content (substitute `$LEARNING_DIR` as the
-resolved absolute path, e.g. `/Users/{username}/.gstack/learning`):
+resolved absolute path, e.g. `/Users/{username}/.agents/skills/ai-learning`):
 
 ```python
 #!/usr/bin/env python3
@@ -1647,7 +1652,7 @@ def log(msg):
 try:
     smtp_config_path = LEARNING_DIR / ".smtp-config.json"
     if not smtp_config_path.exists():
-        msg = "SMTP config not found. Fill in ~/.gstack/learning/.smtp-config.json first."
+        msg = "SMTP config not found. Fill in ~/.agents/skills/ai-learning/.smtp-config.json first."
         print(msg); log(msg); sys.exit(1)
 
     config = load(smtp_config_path)
@@ -1735,7 +1740,7 @@ chmod +x "$DELIVER_SCRIPT"
 Write **only if the file does not already exist** (never overwrite credentials):
 
 ```bash
-SMTP_CONFIG="$HOME/.gstack/learning/.smtp-config.json"
+SMTP_CONFIG="$HOME/.agents/skills/ai-learning/.smtp-config.json"
 ```
 
 ```json
@@ -1749,9 +1754,9 @@ SMTP_CONFIG="$HOME/.gstack/learning/.smtp-config.json"
 }
 ```
 
-Add `.smtp-config.json` to `$HOME/.gstack/learning/.gitignore` (create if missing):
+Add `.smtp-config.json` to `$HOME/.agents/skills/ai-learning/.gitignore` (create if missing):
 ```bash
-echo ".smtp-config.json" >> "$HOME/.gstack/learning/.gitignore"
+echo ".smtp-config.json" >> "$HOME/.agents/skills/ai-learning/.gitignore"
 ```
 
 #### 5.5c — Generate and load launchd plist
@@ -1761,9 +1766,9 @@ Resolve all paths to absolute (launchd does NOT expand `~` or `$HOME`):
 
 ```bash
 PLIST_PATH="$HOME/Library/LaunchAgents/com.gstack.ai-learning.plist"
-ABS_DELIVER="$HOME/.gstack/learning/deliver.py"
-ABS_STDOUT="$HOME/.gstack/learning/delivery.stdout.log"
-ABS_STDERR="$HOME/.gstack/learning/delivery.stderr.log"
+ABS_DELIVER="$HOME/.agents/skills/ai-learning/deliver.py"
+ABS_STDOUT="$HOME/.agents/skills/ai-learning/delivery.stdout.log"
+ABS_STDERR="$HOME/.agents/skills/ai-learning/delivery.stderr.log"
 ```
 
 Write `$PLIST_PATH`:
@@ -1925,7 +1930,7 @@ Skip this step entirely during curriculum generation (Steps 1–6). Never trigge
 Resolution order:
 1. User specifies a session number ("quiz me on session 3") → use Session 3
 2. User says "today's quiz" or "quiz me" without a number → ask: "Which session number? (1–13, or 'capstone')"
-3. Look for the curriculum markdown file at `~/.gstack/learning/{any}-curriculum.md` → read Q1/Q2/Q3 from that file for the requested session
+3. Look for the curriculum markdown file at `~/.agents/skills/ai-learning/{any}-curriculum.md` → read Q1/Q2/Q3 from that file for the requested session
 4. No file found → ask: "Could you paste the quiz section from your day HTML file? I'll run it interactively from there."
 
 ### Interactive quiz loop
@@ -1990,9 +1995,9 @@ If user says "capstone quiz" or "quiz me on the capstone":
   is based primarily on model knowledge about comparable products and public signals
   (job postings, product demos, user reviews). Label: [Model Knowledge]."
 
-**If `~/.gstack/learning/` cannot be created:**
+**If `~/.agents/skills/ai-learning/` cannot be created:**
 - Use current working directory as fallback
-- Print clearly: "Note: Using current directory for output (could not write to ~/.gstack/learning/)"
+- Print clearly: "Note: Using current directory for output (could not write to ~/.agents/skills/ai-learning/)"
 
 **If the product name is ambiguous (e.g., "AI" or "Google"):**
 - Ask for clarification: "Could you be more specific? For example: 'Google Gemini',

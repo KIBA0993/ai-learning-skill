@@ -14,11 +14,20 @@
 *.swp
 *.swo
 
-# Personal learning outputs (stored in ~/.gstack/learning/ outside this repo)
-# Do NOT add curriculum/*.md or quiz-*.md here — they live in ~/.gstack/learning/
+# When this repo is cloned to ~/.agents/skills/ai-learning, generated files sit next to SKILL.md:
+*-day-*.html
+*-manifest.json
+deliver.py
+delivery.log
+delivery.stdout.log
+delivery.stderr.log
+quiz-*.md
+*-curriculum.md
+*-curriculum.html
 
 # If you ever copy learning files into this repo by mistake — never commit credentials
 smtp-config.json
+.smtp-config.json
 .user-profile.json
 
 # Internal backlog — keep local only (not published with the repo)
