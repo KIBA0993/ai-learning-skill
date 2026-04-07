@@ -433,6 +433,65 @@ the product's features, category, and comparable products. Label these:
 
 ---
 
+### Layer 1.5: Current State Research (run once — feeds all "current state" sections)
+
+**Goal:** Find product-specific and role-specific evidence of what life looks like
+*without* {PRODUCT}. This grounds every "Current state" section in real-world
+research rather than model knowledge.
+
+**Why this layer exists:** The product's own blog, case studies, and comparison pages
+almost always contain explicit "before/after" language — they describe the exact pain
+point they solve. Role-specific practitioner articles describe what a {ROLE} actually
+does today without the product. Neither source is captured by Layers 1–4 unless
+explicitly searched.
+
+#### Part A — Product "before" narrative (run 3 searches):
+
+```
+"{PRODUCT}" case study OR "customer story" OR "before and after"
+"{PRODUCT}" blog "problem" OR "pain point" OR "without"
+"{PRODUCT}" vs "{main competitor}" site:{PRODUCT domain}
+```
+
+Read the top result from each search. Extract any explicit description of what
+users did *before* {PRODUCT}, what broke, or what was painful. Store as
+`current_state_product_evidence` — a list of quoted or paraphrased findings,
+each tagged with its source URL.
+
+If the product blog has posts like benchmark results, case studies, or "why we
+built this" — these are high-value. Read them for before-state language.
+
+#### Part B — Role-specific workflow queries (run 1 search per role):
+
+```
+"{ROLE}" "{product category}" workflow OR process "before" OR "manually" OR "pain" article {current year}
+```
+
+Where `product category` = the category of {PRODUCT} (e.g. "AI backend platform",
+"LLM gateway", "AI coding assistant"). This finds practitioner articles, forum posts,
+or job descriptions that describe how a {ROLE} handles this problem today without
+a dedicated tool.
+
+Store as `current_state_role_evidence` — paraphrased findings tagged with source URL
+and role.
+
+#### Output of Layer 1.5:
+
+After both searches, produce an internal summary:
+
+```
+CURRENT STATE EVIDENCE:
+- Product sources: {N found} — key before-state: "{1-2 sentence summary}"
+- Role sources: {N found} — key before-state for {ROLE}: "{1-2 sentence summary}"
+- Gaps: {which sessions have weak evidence — will fall back to [model knowledge]}
+```
+
+This summary is used by the current state template in every session block.
+If evidence is sparse, note it now — do not silently generate model knowledge
+and present it as fact.
+
+---
+
 ### Layer 2: Technology Content (run per identified technology × role lens)
 
 **Goal:** Find learning material for each technology in the stack, through the
@@ -451,18 +510,52 @@ role-specific query pattern:
 **Plus a general search for each technology:**
 `"{technology}" explained {current year}`
 
-**Plus a video search for each technology (Enhancement 1C — ensures video coverage):**
+**Video search — run when `format` = `mixed` or `technical` (skip for `text`):**
+
+When format is `mixed` or `technical`, video is part of the best learning material
+for this user. Run the full search hierarchy below for every technology. Do not skip
+or defer. If no suitable video is found after all tiers, note it explicitly in the
+source list as `⚠️ No video found for this technology — text sources only`.
+
+**Video search fallback hierarchy (run in order, stop at first usable result):**
+
+*Tier 1 — Product-specific video:*
+`"{PRODUCT}" "{technology}" tutorial OR demo OR explained youtube 2024 2025`
+
+*Tier 2 — Technology concept video (broader, product-agnostic):*
 `"{technology}" explained video tutorial youtube 2024 2025`
 `"{technology}" {ROLE} case study presentation youtube OR vimeo`
 
-Preferred YouTube channels to look for in video results:
+*Tier 3 — Role-concept video (when technology is too narrow to find coverage):*
+`"{ROLE}" "{related concept}" explained youtube 2024 2025`
+
+Stop at the first tier that yields a scoreable result. Log which tier was used.
+
+**Tier 3 relevance gate:** Before including a Tier 3 video, ask:
+> "Does this video directly help a {ROLE} understand *{this session's specific topic}*,
+> or is it only loosely connected by category?"
+
+Apply the same 1–10 relevance scoring as text sources. If the video scores < 7 for
+relevance to *this session's specific concept* (not just the role or broad technology
+category), **omit it entirely** and emit:
+`⚠️ No relevant video found for this session — searched 3 tiers`
+
+A vague category match (e.g. "general LLM explainer" for a session specifically about
+model gateways) scores ≤ 5 and must be omitted. A loose match wastes the learner's
+time and signals low research quality. No video is better than a misleading one.
+
+Preferred YouTube channels (prioritise these in search results):
 - 3Blue1Brown (math/ML fundamentals)
 - Andrej Karpathy (neural networks, LLMs)
 - StatQuest with Josh Starmer (ML concepts for non-experts)
 - Official product channels (OpenAI, Anthropic, Cursor, Google DeepMind, etc.)
 - Conference talks (NeurIPS, ICML, Google I/O, WWDC)
 
-Apply quality filter to results. Note which technologies have good external sources
+**Source mix rule for `mixed` format:** target 1 video + ≥ 2 text sources per session.
+Use the tiebreak at the scoring step — but here the goal is to actively find that video,
+not just prefer it if it shows up.
+
+Apply quality filter to all results. Note which technologies have good external sources
 vs. which need model knowledge supplementation.
 
 ---
@@ -864,10 +957,31 @@ specific content. This feeds directly into the day-summary box in the HTML outpu
 **How this applies to you as a {ROLE}:**
 
 **Current state (without {PRODUCT}):**
-1. {Manual or status-quo step 1} — ~{X} min
-2. {Manual or status-quo step 2} — ~{X} min
-3. {Manual or status-quo step 3} — ~{X} min
+
+*Before scenario:* {One sentence naming a concrete person, team, or situation — e.g.
+"A PM at a 20-person AI startup without Insforge typically..." or "Before tools like
+{PRODUCT} existed, an engineering lead would...". Make it specific to the role and
+plausible — not a generic "companies struggle with..." opener.}
+
+1. {Step 1 — name the actual tool, file, or workflow used} — ~{X} min `[researched]` or `[model knowledge]`
+2. {Step 2 — concrete action, not a category} — ~{X} min `[researched]` or `[model knowledge]`
+3. {Step 3} — ~{X} min `[researched]` or `[model knowledge]`
 *Total: ~{total time}; requires {who/what skill is needed}*
+
+Sourcing rule — priority order:
+1. **`[researched — product source]`** Use `current_state_product_evidence` from Layer 1.5
+   Part A when it contains before-state language for this session's topic. Paraphrase
+   or quote directly. This is the most credible source — the product's own description
+   of the problem they solve.
+2. **`[researched — role source]`** Use `current_state_role_evidence` from Layer 1.5
+   Part B when it describes how a {ROLE} handles this workflow today. Paraphrase with
+   the role lens applied.
+3. **`[model knowledge]`** Only when Layer 1.5 produced no evidence for this session's
+   topic. Must still be specific — name real tools, real steps, real consequences.
+   Never use generic placeholders like "manage the process manually."
+
+Do not present model knowledge as researched fact. If evidence is genuinely sparse,
+say so: *"No external source found for this step — based on category norms."*
 
 **With {PRODUCT}:**
 {1-2 sentences — what changes, what step is eliminated or transformed, what the outcome is}
@@ -1228,9 +1342,6 @@ th { background: #f3f4f6; font-weight: 600; }
 pre { background: #f3f4f6; padding: 16px; border-radius: 6px; overflow-x: auto; font-size: 0.85em; }
 code { font-family: "SF Mono","Fira Code",Consolas,monospace; background: #f3f4f6; padding: 2px 5px; border-radius: 3px; font-size: 0.85em; }
 pre code { background: none; padding: 0; }
-details { border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px 12px; margin: 8px 0; }
-summary { cursor: pointer; font-weight: 600; color: #2563eb; }
-details[open] summary { margin-bottom: 8px; }
 hr { border: none; border-top: 1px solid #e5e7eb; margin: 2em 0; }
 ul, ol { padding-left: 1.5em; } li { margin-bottom: 0.3em; }
 nav#top-nav {
@@ -1239,26 +1350,38 @@ nav#top-nav {
 }
 nav#top-nav a { text-decoration: none; font-size: 0.85em; font-weight: 600; color: #374151; white-space: nowrap; }
 nav#top-nav a:hover { color: #2563eb; }
-/* Quiz / answer reveal */
+/* Day summary */
 .day-summary { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 14px 18px; margin-bottom: 24px; }
 .day-summary strong { font-size: 1.1em; display: block; margin-bottom: 6px; }
 .session-insight { font-size: 0.97em; line-height: 1.6; color: #374151; margin: 8px 0 12px 0; padding: 10px 14px; background: rgba(255,255,255,0.6); border-left: 3px solid #2563eb; border-radius: 0 6px 6px 0; }
+/* Quiz — questions block */
 #quiz-section { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 16px; margin: 24px 0; }
-#answer-section { background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 16px; margin: 24px 0; }
-.options { list-style: none; padding: 0; margin: 8px 0 12px 0; }
-.options li { padding: 6px 10px; border-radius: 4px; }
-.options li:hover { background: #f3f4f6; }
-.done-btn { background: #2563eb; color: #fff; border: none; padding: 10px 22px; border-radius: 6px; cursor: pointer; font-size: 1em; margin-top: 8px; }
-.done-btn:hover { background: #1d4ed8; }
-#q3-answer { width: 100%; min-height: 100px; padding: 10px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 0.95em; margin-top: 8px; font-family: inherit; resize: vertical; }
+.question { margin-bottom: 20px; }
+.question:last-of-type { margin-bottom: 0; }
+/* Divider between questions and answers */
+.answer-divider { text-align: center; margin: 8px 0 0; padding: 10px 0 0; border-top: 2px dashed #bae6fd; font-size: 0.85em; color: #6b7280; font-style: italic; }
+/* Answers — grouped block (email-safe: always open, no JS needed) */
+details.answers-block { border: 1px solid #86efac; border-radius: 8px; margin: 24px 0; overflow: hidden; }
+details.answers-block summary { cursor: pointer; padding: 12px 16px; background: #dcfce7; color: #166534; font-weight: 700; font-size: 1em; list-style: none; }
+details.answers-block summary::-webkit-details-marker { display: none; }
+details.answers-block summary::before { content: "▶ "; font-size: 0.75em; }
+details.answers-block[open] summary::before { content: "▼ "; }
+.answers-body { background: #f0fdf4; padding: 16px; border-top: 1px solid #86efac; }
+.answer-item { margin-bottom: 16px; }
+.answer-item:last-child { margin-bottom: 0; }
+.answer-item p { margin: 4px 0; font-size: 0.95em; color: #14532d; }
+/* Complete banner (day 15) */
 .complete-banner { background: #f0fdf4; border: 2px solid #4ade80; border-radius: 8px; padding: 20px; margin: 24px 0; text-align: center; font-size: 1.1em; }
+/* Coming up next */
+.coming-next { background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #6366f1; border-radius: 0 8px 8px 0; padding: 14px 18px; margin: 24px 0; }
+.coming-next strong { display: block; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.05em; color: #6366f1; margin-bottom: 4px; }
+.coming-next p { margin: 0; color: #374151; font-size: 0.97em; }
 @media (prefers-color-scheme: dark) {
   body { color: #e5e7eb; background: #111827; }
   h2 { border-color: #374151; }
   blockquote { border-color: #374151; color: #9ca3af; background: #1f2937; }
   th, td { border-color: #374151; } th { background: #1f2937; }
   pre, code { background: #1f2937; }
-  details { border-color: #374151; }
   hr { border-color: #374151; }
   nav#top-nav { background: #111827; border-color: #374151; }
   nav#top-nav a { color: #9ca3af; }
@@ -1266,12 +1389,15 @@ nav#top-nav a:hover { color: #2563eb; }
   .day-summary { background: #1e3a5f; border-color: #3b82f6; }
   .session-insight { color: #d1d5db; background: rgba(0,0,0,0.2); border-left-color: #3b82f6; }
   #quiz-section { background: #1e3a5f; border-color: #3b82f6; }
-  #answer-section { background: #14532d; border-color: #4ade80; }
-  .options li:hover { background: #1f2937; }
-  .done-btn { background: #3b82f6; }
-  .done-btn:hover { background: #2563eb; }
-  #q3-answer { background: #1f2937; border-color: #374151; color: #e5e7eb; }
+  .answer-divider { border-color: #3b82f6; color: #9ca3af; }
+  details.answers-block { border-color: #4ade80; }
+  details.answers-block summary { background: #14532d; color: #bbf7d0; }
+  .answers-body { background: #052e16; border-color: #4ade80; }
+  .answer-item p { color: #86efac; }
   .complete-banner { background: #14532d; border-color: #4ade80; }
+  .coming-next { background: #1e1b4b; border-color: #374151; border-left-color: #818cf8; }
+  .coming-next strong { color: #818cf8; }
+  .coming-next p { color: #d1d5db; }
 }
 @media print { nav#top-nav { display: none; } body { font-size: 12pt; max-width: 100%; padding: 0; } a { color: #000; } }
 @media (max-width: 480px) { body { font-size: 16px; padding: 12px; } h1 { font-size: 1.5em; } table { font-size: 0.8em; } }
@@ -1330,23 +1456,6 @@ DAY_FILE="$LEARNING_DIR/{PRODUCT_SLUG}-{ROLE_SLUG}-day-{NN}.html"
 <main>
 {DAY_CONTENT}
 </main>
-<script>
-window.addEventListener('load', function() {
-  var saved = sessionStorage.getItem('q3-answer');
-  if (saved) { var el = document.getElementById('q3-answer'); if (el) el.value = saved; }
-});
-document.addEventListener('DOMContentLoaded', function() {
-  var q3 = document.getElementById('q3-answer');
-  if (q3) q3.addEventListener('input', function() { sessionStorage.setItem('q3-answer', this.value); });
-});
-function revealAnswers() {
-  var quiz = document.getElementById('quiz-section');
-  var ans = document.getElementById('answer-section');
-  if (quiz) quiz.style.display = 'none';
-  if (ans) { ans.style.display = 'block'; ans.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-  sessionStorage.removeItem('q3-answer');
-}
-</script>
 </body>
 </html>
 ```
@@ -1423,42 +1532,65 @@ Convert the session's markdown (key concepts, sources, "How this applies to you"
 using the standard markdown→HTML rules. The "How this applies to you" section renders as
 plain HTML paragraphs — the Current state list, With {PRODUCT} paragraph, and role takeaway.
 
-*Every day (01–13) — quiz section (questions visible, answers hidden):*
+*Every day (01–13) — quiz section (all questions first, answers grouped below):*
+
+> **Email-safe design:** No JavaScript. All questions are shown first so the learner
+> reads them before scrolling to answers. The `<details open>` answers block is always
+> expanded — email clients (Gmail etc.) do not support JS-based show/hide.
+
 ```html
 <div id="quiz-section">
-  <h4>✅ Session {N} Quiz</h4>
+  <h4>📋 Session {N} Quiz</h4>
+  <p style="font-size:0.9em;color:#6b7280;margin-top:0;">Read all questions, then scroll down to check your answers.</p>
 
-  <p><strong>Q1:</strong> {Q1 scenario text}</p>
-  <ul class="options">
-    <li>A) {option A}</li>
-    <li>B) {option B}</li>
-    <li>C) {option C}</li>
-    <li>D) {option D}</li>
-  </ul>
+  <div class="question">
+    <p><strong>Q1:</strong> {Q1 scenario text}</p>
+    <ul>
+      <li>A) {option A}</li>
+      <li>B) {option B}</li>
+      <li>C) {option C}</li>
+      <li>D) {option D}</li>
+    </ul>
+  </div>
 
-  <p><strong>Q2:</strong> {Q2 scenario text}</p>
-  <ul class="options">
-    <li>A) {option A}</li>
-    <li>B) {option B}</li>
-    <li>C) {option C}</li>
-    <li>D) {option D}</li>
-  </ul>
+  <div class="question">
+    <p><strong>Q2:</strong> {Q2 scenario text}</p>
+    <ul>
+      <li>A) {option A}</li>
+      <li>B) {option B}</li>
+      <li>C) {option C}</li>
+      <li>D) {option D}</li>
+    </ul>
+  </div>
 
-  <p><strong>Q3 (Open-ended):</strong> {Q3 prompt}</p>
-  <textarea id="q3-answer" placeholder="Write your answer here before revealing the model answer..."></textarea>
+  <div class="question">
+    <p><strong>Q3 (open-ended):</strong> {Q3 prompt}</p>
+    <p style="font-size:0.9em;color:#6b7280;font-style:italic;">Reflect before scrolling to the answers below.</p>
+  </div>
 
-  <button class="done-btn" onclick="revealAnswers()">Done for today →</button>
+  <div class="answer-divider">↓ &nbsp; Answers below &nbsp; ↓</div>
 </div>
 
-<div id="answer-section" style="display:none">
-  <h4>✅ Answers — Session {N}</h4>
-  <p><strong>Q1 — Correct: {letter}</strong><br>{2-3 sentence explanation: why correct + why each wrong answer fails}</p>
-  <p><strong>Q2 — Correct: {letter}</strong><br>{explanation}</p>
-  <p><strong>Q3 — Model answer:</strong><br>{2-3 sentence reference answer for self-comparison}</p>
-</div>
+<details class="answers-block" open>
+  <summary>✅ Session {N} Quiz Answers</summary>
+  <div class="answers-body">
+    <div class="answer-item">
+      <p><strong>Q1 — Correct: {letter}</strong></p>
+      <p>{2-3 sentence explanation: why correct + why each wrong answer fails}</p>
+    </div>
+    <div class="answer-item">
+      <p><strong>Q2 — Correct: {letter}</strong></p>
+      <p>{explanation}</p>
+    </div>
+    <div class="answer-item">
+      <p><strong>Q3 — Model answer:</strong></p>
+      <p>{2-3 sentence reference answer for self-comparison}</p>
+    </div>
+  </div>
+</details>
 ```
 
-*Day 14 — Capstone Quiz Part 1 (5 MC questions, all hidden until Done):*
+*Day 14 — Capstone Quiz Part 1 (5 MC questions, answers grouped below):*
 ```html
 <div class="day-summary">
   <strong>Day 14 of 15 — Capstone Quiz ⏱ 20 min</strong>
@@ -1467,66 +1599,117 @@ plain HTML paragraphs — the Current state list, With {PRODUCT} paragraph, and 
 
 <div id="quiz-section">
   <h4>📋 Capstone Quiz — Multiple Choice</h4>
-  <p><em>Answer all 5 before clicking Done.</em></p>
+  <p style="font-size:0.9em;color:#6b7280;margin-top:0;">Answer all 5 questions, then scroll down to check your answers.</p>
 
-  <p><strong>Q1:</strong> {MC covering Module 1}</p>
-  <ul class="options">...</ul>
+  <div class="question">
+    <p><strong>Q1:</strong> {MC covering Module 1}</p>
+    <ul><li>A) ...</li><li>B) ...</li><li>C) ...</li><li>D) ...</li></ul>
+  </div>
 
-  <p><strong>Q2:</strong> {MC covering Module 2}</p>
-  <ul class="options">...</ul>
+  <div class="question">
+    <p><strong>Q2:</strong> {MC covering Module 2}</p>
+    <ul><li>A) ...</li><li>B) ...</li><li>C) ...</li><li>D) ...</li></ul>
+  </div>
 
-  <p><strong>Q3:</strong> {MC covering Module 3}</p>
-  <ul class="options">...</ul>
+  <div class="question">
+    <p><strong>Q3:</strong> {MC covering Module 3}</p>
+    <ul><li>A) ...</li><li>B) ...</li><li>C) ...</li><li>D) ...</li></ul>
+  </div>
 
-  <p><strong>Q4:</strong> {MC covering Module 4}</p>
-  <ul class="options">...</ul>
+  <div class="question">
+    <p><strong>Q4:</strong> {MC covering Module 4}</p>
+    <ul><li>A) ...</li><li>B) ...</li><li>C) ...</li><li>D) ...</li></ul>
+  </div>
 
-  <p><strong>Q5:</strong> {MC covering Module 5}</p>
-  <ul class="options">...</ul>
+  <div class="question">
+    <p><strong>Q5:</strong> {MC covering Module 5}</p>
+    <ul><li>A) ...</li><li>B) ...</li><li>C) ...</li><li>D) ...</li></ul>
+  </div>
 
-  <button class="done-btn" onclick="revealAnswers()">Check my answers →</button>
+  <div class="answer-divider">↓ &nbsp; Answers below &nbsp; ↓</div>
 </div>
 
-<div id="answer-section" style="display:none">
-  <h4>✅ Capstone MC Answers</h4>
-  <p><strong>Q1 — Correct: {letter}</strong><br>{explanation}</p>
-  <p><strong>Q2 — Correct: {letter}</strong><br>{explanation}</p>
-  <p><strong>Q3 — Correct: {letter}</strong><br>{explanation}</p>
-  <p><strong>Q4 — Correct: {letter}</strong><br>{explanation}</p>
-  <p><strong>Q5 — Correct: {letter}</strong><br>{explanation}</p>
-  <p style="margin-top:16px"><em>Open-ended questions are in Day 15 →</em></p>
-</div>
+<details class="answers-block" open>
+  <summary>✅ Capstone MC Answers</summary>
+  <div class="answers-body">
+    <div class="answer-item">
+      <p><strong>Q1 — Correct: {letter}</strong></p>
+      <p>{explanation}</p>
+    </div>
+    <div class="answer-item">
+      <p><strong>Q2 — Correct: {letter}</strong></p>
+      <p>{explanation}</p>
+    </div>
+    <div class="answer-item">
+      <p><strong>Q3 — Correct: {letter}</strong></p>
+      <p>{explanation}</p>
+    </div>
+    <div class="answer-item">
+      <p><strong>Q4 — Correct: {letter}</strong></p>
+      <p>{explanation}</p>
+    </div>
+    <div class="answer-item">
+      <p><strong>Q5 — Correct: {letter}</strong></p>
+      <p>{explanation}</p>
+    </div>
+    <p style="margin-top:16px;font-style:italic;color:#166534;">Open-ended questions are in Day 15 →</p>
+  </div>
+</details>
 ```
 
 *Day 15 — Capstone Quiz Part 2 (2 open-ended + Course Complete):*
 ```html
 <div class="day-summary">
   <strong>Day 15 of 15 — Capstone: Open-Ended Questions ⏱ 15 min</strong>
-  <p><em>Two synthesis questions. Write your answers, then reveal model answers.</em></p>
+  <p><em>Two synthesis questions. Write your answers on paper or in a notes app, then scroll down for model answers.</em></p>
 </div>
 
 <div id="quiz-section">
   <h4>📋 Capstone Quiz — Open-Ended</h4>
+  <p style="font-size:0.9em;color:#6b7280;margin-top:0;">Write your answers before scrolling to the model answers below.</p>
 
-  <p><strong>OE1:</strong> {Open-ended synthesis question spanning multiple modules}</p>
-  <textarea id="q3-answer" placeholder="Write your answer here..."></textarea>
+  <div class="question">
+    <p><strong>OE1:</strong> {Open-ended synthesis question spanning multiple modules}</p>
+  </div>
 
-  <p><strong>OE2:</strong> {Second synthesis question}</p>
-  <textarea id="oe2-answer" style="width:100%;min-height:100px;padding:10px;border:1px solid #d1d5db;border-radius:4px;font-size:0.95em;margin-top:8px;font-family:inherit;resize:vertical;" placeholder="Write your answer here..."></textarea>
+  <div class="question">
+    <p><strong>OE2:</strong> {Second synthesis question}</p>
+  </div>
 
-  <button class="done-btn" onclick="revealAnswers()">Reveal model answers →</button>
+  <div class="answer-divider">↓ &nbsp; Model answers below &nbsp; ↓</div>
 </div>
 
-<div id="answer-section" style="display:none">
-  <h4>✅ Capstone Open-Ended Model Answers</h4>
-  <p><strong>OE1 — Model answer:</strong><br>{2-3 sentence reference answer}</p>
-  <p><strong>OE2 — Model answer:</strong><br>{2-3 sentence reference answer}</p>
-
-  <div class="complete-banner">
-    🎉 <strong>Course complete!</strong><br>
-    You've finished all 15 sessions of your {PRODUCT} curriculum as a {ROLE}.<br>
-    <small>Review your weak areas in the quiz tracker, then revisit those sessions.</small>
+<details class="answers-block" open>
+  <summary>✅ Capstone Open-Ended Model Answers</summary>
+  <div class="answers-body">
+    <div class="answer-item">
+      <p><strong>OE1 — Model answer:</strong></p>
+      <p>{2-3 sentence reference answer}</p>
+    </div>
+    <div class="answer-item">
+      <p><strong>OE2 — Model answer:</strong></p>
+      <p>{2-3 sentence reference answer}</p>
+    </div>
   </div>
+</details>
+
+<div class="complete-banner">
+  🎉 <strong>Course complete!</strong><br>
+  You've finished all 15 sessions of your {PRODUCT} curriculum as a {ROLE}.<br>
+  <small>Review your weak areas in the quiz tracker, then revisit those sessions.</small>
+</div>
+```
+
+*Every day (01–14) — "Coming up next" teaser (append after the answers block):*
+
+Show a teaser for the next day's session so the learner knows what's coming.
+Omit on day 15 (course complete banner replaces it).
+
+```html
+<div class="coming-next">
+  <strong>Coming up next</strong>
+  <p>Day {N+1} — {Next session title}<br>
+  <span style="font-size:0.9em;color:#6b7280;">{One sentence derived from the next session's what_learn field — concrete, not generic.}</span></p>
 </div>
 ```
 
