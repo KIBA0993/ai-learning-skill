@@ -65,25 +65,6 @@ ln -sf /full/path/to/your/clone/SKILL.md ~/.agents/skills/ai-learning/SKILL.md
 - Point your skill picker or rules at **`~/.agents/skills/ai-learning/SKILL.md`**, or in chat use **`@~/.agents/skills/ai-learning/SKILL.md`** (if your editor supports path-based @).
 - Other tools: follow their “add a skill” docs using the same path.
 
-### OpenClaw (ClawHub-style install)
-
-`SKILL.md` includes YAML **frontmatter** (`name: ai-learning`, `description`, …) so OpenClaw and similar tools can parse the skill slug.
-
-- **GitHub URL:** `https://github.com/KIBA0993/ai-learning-skill`  
-- **Install from the repository root** — `SKILL.md` is at the **top level** of the repo. Do **not** add a subfolder path (e.g. avoid `.../ai-learning-skill/some/nested/folder` unless you mirror that layout).
-- **Slug / name:** `ai-learning` (must stay lowercase; matches the `name` field in frontmatter).
-
-If the installer still says **invalid slug**, use **manual clone** (Option A above) or paste the repo URL **without** a subfolder.
-
-#### OpenClaw + Telegram (“ACP thread” not available)
-
-In some setups, **OpenClaw cannot start a dedicated ACP skill session** inside a **Telegram channel** — you may see a message like *“ACP thread spawn is not supported for Telegram channels.”* That is a **platform limitation**, not a bug in this skill.
-
-**What still works**
-
-- Ask the bot to run the skill **in the same chat**: e.g. “Follow `SKILL.md` from Step 0 — learner profile, then role, then product” and paste or attach **`SKILL.md`** if the bot doesn’t have it loaded.
-- Use **Cursor / Claude Code / web Claude** with `@SKILL.md` for the full flow (research + file generation on a machine with disk access).
-- **Daily delivery** is designed for **email** (`SKILL.md` Step 5.5). Telegram is great for nudges; the HTML files and manifest still land on the machine where generation runs.
 
 ### Outputs (same directory as the skill)
 
