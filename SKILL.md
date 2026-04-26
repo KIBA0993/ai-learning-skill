@@ -1800,6 +1800,25 @@ Tell the user:
 >
 > Scheduler reads `days[N-1].file` to deliver today's content.
 
+#### Active manifest pointer
+
+After writing the manifest, also write an explicit active-manifest pointer:
+
+```bash
+ACTIVE_MANIFEST="$LEARNING_DIR/active-manifest.json"
+```
+
+```json
+{
+  "manifest": "{PRODUCT_SLUG}-{ROLE_SLUG}-manifest.json",
+  "updated": "{ISO 8601 datetime}",
+  "note": "Explicit active curriculum for deliver.py; prevents newest-manifest accidents."
+}
+```
+
+`deliver.py` must prefer this pointer over "newest manifest wins". This prevents a test
+or newly generated curriculum from accidentally hijacking the next scheduled email.
+
 ---
 
 ### Step 5.5: Delivery Automation Setup
@@ -1825,7 +1844,7 @@ resolved absolute path, e.g. `/Users/{username}/.agents/skills/ai-learning`):
 ```python
 #!/usr/bin/env python3
 """AI Learning daily email delivery script. Run daily by launchd."""
-import json, smtplib, sys
+import json, re, smtplib, sys
 from datetime import date, datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -1856,14 +1875,31 @@ try:
         msg = "delivery_email not set in profile. Run 'update delivery' to configure."
         print(msg); log(msg); sys.exit(1)
 
-    # Most recently modified manifest — policy for multiple curricula: deliver the newest
-    manifests = sorted(LEARNING_DIR.glob("*-manifest.json"),
-                       key=lambda p: p.stat().st_mtime, reverse=True)
-    if not manifests:
+    # Prefer explicit active curriculum; fall back to newest manifest for legacy installs.
+    active_pointer = LEARNING_DIR / "active-manifest.json"
+    if active_pointer.exists():
+        active = load(active_pointer)
+        active_name = active.get("manifest")
+        if not active_name:
+            msg = "active-manifest.json missing manifest field."
+            print(msg); log(msg); sys.exit(1)
+        manifest_path = (LEARNING_DIR / active_name).resolve()
+        if manifest_path.parent != LEARNING_DIR.resolve() or not manifest_path.exists():
+            msg = f"Active manifest not found or invalid: {active_name}"
+            print(msg); log(msg); sys.exit(1)
+    else:
+        manifests = sorted(LEARNING_DIR.glob("*-manifest.json"),
+                           key=lambda p: p.stat().st_mtime, reverse=True)
+        if not manifests:
+            msg = "No manifest found. Run the AI learning skill first."
+            print(msg); log(msg); sys.exit(1)
+        manifest_path = manifests[0]
+
+    if not manifest_path.exists():
         msg = "No manifest found. Run the AI learning skill first."
         print(msg); log(msg); sys.exit(1)
 
-    manifest = load(manifests[0])
+    manifest = load(manifest_path)
 
     # Fallback: if manifest lacks start_date (legacy), use generated date
     raw_start = manifest.get("start_date") or manifest.get("generated", "")[:10]
@@ -1884,6 +1920,35 @@ try:
         print(msg); log(msg); sys.exit(1)
 
     html_content = html_file.read_text()
+
+    # Pre-send quality gate: fail closed rather than emailing placeholder material.
+    visible_text = re.sub(r"<(script|style).*?</\1>", " ", html_content,
+                          flags=re.IGNORECASE | re.DOTALL)
+    visible_text = re.sub(r"<[^>]+>", " ", visible_text)
+    visible_text = re.sub(r"\s+", " ", visible_text).strip()
+    lowered = visible_text.lower()
+    placeholders = [
+        "key concept 1", "key concept 2", "key concept 3",
+        "learn the engineering decisions behind this part of",
+        "q1..q5", "lorem ipsum", "placeholder", "see daily file for quiz"
+    ]
+    issues = [f"placeholder text found: {p}" for p in placeholders if p in lowered]
+    word_count = len(re.findall(r"[A-Za-z0-9]+(?:[-'][A-Za-z0-9]+)?", visible_text))
+    is_capstone = day_number >= manifest["total_days"] - 1 or "capstone" in day_entry.get("session", "").lower()
+    min_words = 80 if is_capstone else 350
+    if word_count < min_words:
+        issues.append(f"too short: {word_count} words (minimum {min_words})")
+    required = ["quiz", "answer"]
+    if not is_capstone:
+        required += ["key concepts", "sources", "implementation", "release checkpoint"]
+    issues.extend([f"missing required section: {s}" for s in required if s not in lowered])
+    if '<div id="quiz-section"' not in html_content:
+        issues.append("missing quiz-section HTML block")
+    if '<div id="answer-section"' not in html_content:
+        issues.append("missing answer-section HTML block")
+    if issues:
+        msg = f"Quality gate failed for {html_file.name}; email not sent. Issues: {'; '.join(issues)}"
+        print(msg); log(msg); sys.exit(1)
 
     # Build email with plain-text fallback (for Outlook / strict filters)
     subject = (
