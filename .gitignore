@@ -17,6 +17,8 @@
 # When this repo is cloned to ~/.agents/skills/ai-learning, generated files sit next to SKILL.md:
 *-day-*.html
 *-manifest.json
+active-manifest.json
+*-curriculum.json
 deliver.py
 delivery.log
 delivery.stdout.log

@@ -45,7 +45,8 @@ quizzes after every session.
 **Single canonical directory:** **`$HOME/.agents/skills/ai-learning`** (on your machine: `~/.agents/skills/ai-learning`, **not** `/` at the disk root).
 
 - **`SKILL.md`** lives here (clone or copy the repository into this folder).
-- **Generated outputs** — per-day HTML, markdown curriculum, quiz files, `manifest.json`, `.user-profile.json`, `deliver.py`, `.smtp-config.json`, delivery logs — are written **in the same directory**, alongside `SKILL.md`.
+- **`scripts/build_html.py`** ships with the repo (present when installed via a full clone — README Option A). Step 5 uses it to render all output deterministically from `curriculum.json`. A SKILL.md-only install (Option B) won't have it and falls back to manual authoring.
+- **Generated outputs** — `curriculum.json` (the content source), per-day HTML, `{slug}-curriculum.md`, quiz tracker, `manifest.json`, `active-manifest.json`, `.user-profile.json`, `deliver.py`, `.smtp-config.json`, delivery logs — are written **in the same directory**, alongside `SKILL.md`.
 
 The SETUP step runs `mkdir -p` on this path — on a normal install the folder is created when needed.
 
@@ -70,7 +71,7 @@ echo "Session timestamp: $TIMESTAMP"
 ## Step 0: Learner Profile Setup
 
 Before anything else, check whether the user has a saved learner profile. This profile
-tailors vocabulary depth, content density, and code example presence for all 15 sessions.
+tailors vocabulary depth, content density, and code example presence across all 15 days.
 
 ```bash
 PROFILE_FILE="$HOME/.agents/skills/ai-learning/.user-profile.json"
@@ -82,13 +83,14 @@ mkdir -p "$HOME/.agents/skills/ai-learning" 2>/dev/null || true
 Load and parse `$PROFILE_FILE`. Display:
 > "Using your saved learner profile:
 > AI level: {ai_level_calibrated} | Daily time: {daily_minutes} min | Format: {format}
-> Delivery: {delivery_email} at {delivery_time} (daily)
+> Delivery: {if delivery_email is null → "off (you open files yourself)"; else → "{delivery_email} at {delivery_time} (daily)"}
 >
 > Continue with this profile, or update it? (continue / update)"
 
-If `delivery_email` or `delivery_time` are **missing** from the loaded profile (legacy v1
-profile): treat as a partial first run — ask only Q4 and Q5 before proceeding to Step 1,
-then write the profile back as version 2.
+If `delivery_email` / `delivery_time` are **absent** from the loaded profile (legacy v1
+profile — the keys don't exist): treat as a partial first run — ask only Q4 and Q5 before
+proceeding to Step 1, then write the profile back as version 2. If the keys are present but
+`null`, the user opted out of email — do **not** re-ask; leave delivery off.
 
 - If **continue**: skip to Step 1.
 - If **update**: run the full questionnaire (Q1–Q5), overwrite the profile, then continue to Step 1.
@@ -200,18 +202,25 @@ Ask:
 
 Store as `format`: `text` | `mixed` | `technical`
 
-#### Q4: Delivery Email
+#### Q4: Daily Email Delivery (optional)
 
 Ask:
-> "What email address should your daily learning content be delivered to?"
+> "Do you want your daily session emailed to you automatically? (This is optional — you can
+> always just open the HTML files yourself.)
+> A) Yes — set up daily email delivery
+> B) No — I'll open the files myself"
 
-Free-form text input. **Light validation:** check that the string contains `@` and at
-least one `.` after the `@`. If invalid, prompt once: "That doesn't look like an email
-address. Please re-enter." Accept whatever is provided on the second attempt.
+- If **B (No)**: set `delivery_email = null` and `delivery_time = null`, **skip Q5 entirely**,
+  and skip the delivery-automation setup (Step 5.5) later. Do not collect an email address and
+  do not install any scheduler. Proceed to the profile write.
+- If **A (Yes)**: ask for the address:
+  > "What email address should your daily learning content be delivered to?"
+  Free-form text input. **Light validation:** check that the string contains `@` and at least
+  one `.` after the `@`. If invalid, prompt once: "That doesn't look like an email address.
+  Please re-enter." Accept whatever is provided on the second attempt. Store as `delivery_email`,
+  then continue to Q5.
 
-Store as `delivery_email`.
-
-#### Q5: Delivery Time
+#### Q5: Delivery Time (only if Q4 = Yes)
 
 Ask:
 > "What time of day would you like to receive your daily session?
@@ -241,13 +250,17 @@ Write `$PROFILE_FILE` with this structure:
   "daily_minutes": {10 | 20 | 30},
   "format": "{text | mixed | technical}",
   "calibration_scores": [{true|false}, {true|false}, {true|false}],
-  "delivery_email": "{answer to Q4}",
-  "delivery_time": "{answer to Q5 — HH:MM format}"
+  "delivery_email": "{Q4 email, or null if the user opted out of email}",
+  "delivery_time": "{Q5 HH:MM format, or null if the user opted out of email}"
 }
 ```
 
+**Opted-out vs. missing:** `delivery_email: null` means the user **explicitly declined** email
+(Q4 = No) — this is a complete, valid profile; do NOT re-ask Q4/Q5 on later runs, and skip Step
+5.5. A field being **absent entirely** means a legacy v1 profile — ask Q4/Q5 once to complete it.
+
 **Version note:** Version 2 adds `delivery_email` and `delivery_time`. When a version 1
-profile is loaded and those fields are missing, ask only Q4 and Q5, then write back as
+profile is loaded and those fields are **absent**, ask only Q4 and Q5, then write back as
 version 2. When `version` is missing or < 1: treat as stale, re-run full questionnaire.
 
 **Write-back verification:** After writing, attempt to read back `$PROFILE_FILE` and parse it.
@@ -347,11 +360,27 @@ model knowledge for the full curriculum (show the no-search banner at the top of
 
 ### Quality Filter (apply to every source found)
 
-**Preferred source domains (not exclusive — use judgment for unlisted domains):**
-arxiv.org, huggingface.co, openai.com, anthropic.com, deepmind.google, research.google,
-YouTube (prefer: 3Blue1Brown, Andrej Karpathy, StatQuest, official product channels),
-official product engineering blogs (e.g., cursor.com/blog, engineering.fb.com,
-netflixtechblog.com, blog.google/technology/ai/)
+**Credible source taxonomy — actively seek a MIX of these categories (do not rely on any one):**
+
+| # | Category | Example domains / venues | Notes |
+|---|----------|--------------------------|-------|
+| 1 | Peer-reviewed / academic | arxiv.org, aclanthology.org, dl.acm.org, openreview.net, *.edu papers | Canonical papers, foundational sources |
+| 2 | Standards bodies & official specs | ietf.org/rfc, w3.org, spec sites (e.g. modelcontextprotocol.io/spec), OpenAPI / JSON-Schema, language & framework official docs | The authoritative definition of a technology |
+| 3 | Independent tech journalism | arstechnica.com, theverge.com, technologyreview.com, spectrum.ieee.org, thegradient.pub, quantamagazine.org | Independent reporting & analysis |
+| 4 | University / course material | *.edu course pages, Stanford CS lectures, MIT OpenCourseWare, fast.ai, d2l.ai | Structured teaching material |
+| 5 | Reputable educational sites | developer.mozilla.org (MDN), freecodecamp.org, khanacademy.org, realpython.com, wikipedia.org | Vetted explainers & community references |
+| 6 | Independent practitioner blogs | Well-known individual engineers/researchers NOT paid to market the product (e.g. Simon Willison, Lilian Weng, Jay Alammar), distill.pub | Independent depth — not corporate marketing |
+| 7 | Video | 3Blue1Brown, Andrej Karpathy, StatQuest, conference talks (NeurIPS, ICML, Google I/O, WWDC) | See the Layer 2 video hierarchy |
+| 8 | Interactive / hands-on | Colab notebooks, Hugging Face Spaces, playgrounds, sandboxes, tutorials with runnable code | Learning-by-doing |
+| 9 | First-party / vendor (use sparingly) | {PRODUCT}'s own blog & docs; **big-lab corporate blogs (openai.com, anthropic.com, deepmind.google, huggingface.co/blog, engineering.fb.com, netflixtechblog.com, blog.google)** | Vendor perspective — capped by the Source Diversity Rule |
+
+**How to use this taxonomy:**
+- Categories **1–8 are the primary learning material.** Category **9 is vendor perspective** and is capped by the Source Diversity Rule below.
+- **Big-lab corporate blogs count as VENDOR (category 9), not neutral** — they market the lab's own products and models. Do not let openai.com / anthropic.com / huggingface.co/blog masquerade as third-party sources.
+- This list is illustrative, not exclusive — use judgment for unlisted domains, classifying each into the nearest category.
+
+**Credibility check (SIFT — apply to every candidate source):** before including a source, briefly:
+**S**top (is this a source you recognize / can vouch for?), **I**nvestigate the source (who publishes it, and what's their incentive?), **F**ind better/independent coverage (is the same claim reported by an independent source?), **T**race claims to their origin (prefer the primary paper/spec over a secondary write-up). Prefer sources whose key claims trace to a primary origin, and read *laterally* — judge a source by what independent sources say about it, not by its own self-description.
 
 **Include a source if it meets ALL of:**
 1. Published within the last 24 months (or is a foundational paper/resource)
@@ -390,11 +419,15 @@ Include **as many sources as needed for a learner to fully understand the sessio
 | **Neutral / third-party** | Prioritize these | Independent coverage of the underlying technology, concept, or practice: official specs, academic papers, neutral tech blogs, conference talks, third-party comparisons. These are the **primary** learning material. |
 | **Role-specific** | Include where relevant | Sources tailored to the learner's job function — PM craft, engineering guides, UX methods, analyst frameworks. Weight these more heavily in Modules 3 and 5. |
 
-**Enforcement rules:**
-- **Target:** Aim to keep product-owned sources under **40% of total sources** across the full curriculum. Track the running count as you assign sources — if trending over 40%, prioritize finding neutral alternatives for upcoming sessions. This is a quality target, not a hard limit: exceeding 40% is acceptable when credible neutral sources genuinely don't exist for the remaining topics.
-- **Per-session soft cap:** Aim for 1 product-owned source per session. You may use 2 if credible neutral sources for that specific topic are genuinely unavailable — but never as a default.
-- **Fallback:** If neutral sources are sparse for a topic, use what's available and add: `⚠️ Limited neutral coverage for this topic — supplement with your own current search.`
-- **Widely-documented technologies rule:** For any session covering a technology with rich independent literature (e.g., MCP, PostgreSQL, TypeScript, Transformer architecture, embeddings, LLMs, REST APIs), at least one source must be the official spec, canonical paper, or a neutral explainer — not the product's own take on that technology. These topics have no excuse for lacking neutral sources.
+**Enforcement rules (HARD constraints — verified by the diversity self-check before rendering, see the Research Summary):**
+
+- **Per-domain cap:** No more than **2 sources from any single registrable domain across the entire 15-session curriculum** (all of `*.insforge.dev` = one domain). The vendor's own domain counts here too. If a domain would exceed 2, drop the lowest-scoring extras and re-source from a new domain.
+- **Per-session domain rule:** Within a single session, **no two sources may share a domain** (unless the session legitimately has only one source total).
+- **Minimum distinct domains:** The full curriculum must cite **at least 15 distinct domains** (~one new domain per session). If below 15 after assembly, the curriculum FAILS the self-check — go back to Layer 2 with de-anchored, domain-excluding queries to find more.
+- **Content-type mix (per module of 2–3 sessions):** Each module must include sources from **at least 3 of the 9 taxonomy categories**, including **at least one from categories 1–5** (academic / spec / journalism / course / reputable-educational). A module built only from blogs + vendor FAILS.
+- **Vendor cap (hard):** Product-owned sources (taxonomy category 9, **including big-lab corporate blogs**) must be **≤ 30% of total sources** AND **≤ 1 per session**. A session may use a second vendor source only if it also carries ≥ 2 non-vendor sources.
+- **Widely-documented technologies rule:** For any session covering a technology with rich independent literature (e.g., MCP, PostgreSQL, TypeScript, Transformer architecture, embeddings, LLMs, REST APIs), at least one source MUST be from taxonomy **category 1 or 2** (canonical paper / official spec) — never the vendor's own take.
+- **Fallback:** If a topic genuinely lacks non-vendor coverage after a real retry, use what's available and add: `⚠️ Limited neutral coverage for this topic — supplement with your own current search.`
 - Role-specific sources are mandatory in Module 3 (Your Role), Module 5 (Day-in-Life), and any session where the quiz's Q3 asks the learner to apply role judgment.
 
 **Rationale:** A learner studying a product through their job function lens needs to understand the underlying technology independently — not just through the vendor's narrative. A PM learning about MCP from only the InsForge blog learns InsForge's take on MCP, not MCP itself.
@@ -510,6 +543,14 @@ role-specific query pattern:
 **Plus a general search for each technology:**
 `"{technology}" explained {current year}`
 
+**De-anchoring rule (concept layers — CRITICAL for source diversity):** Layer 2 exists to teach the *technology itself*, not the product. Do **NOT** prefix these searches with `"{PRODUCT}"` — a product-anchored query returns the vendor's own domain first and collapses the candidate pool onto the vendor. Run at least these product-free queries per technology, and deliberately draw the resulting sources from **different domains** (aim for a different taxonomy category per query):
+- `{technology} official specification OR RFC OR paper`      → targets categories 1–2 (academic / spec)
+- `{technology} explained {current year}` (already above)     → targets categories 4–6 (course / educational)
+- `{technology} tutorial hands-on example`                   → targets category 8 (interactive)
+- `{technology} analysis OR review -site:{PRODUCT domain}`   → targets categories 3, 6; explicitly excludes the vendor
+
+Only **Tier 1** of the video hierarchy below may use the product name; all text concept queries stay product-free.
+
 **Video search — run when `format` = `mixed` or `technical` (skip for `text`):**
 
 When format is `mixed` or `technical`, video is part of the best learning material
@@ -611,6 +652,25 @@ After all layers, assess coverage:
 - If all modules have ≥ 2 external sources → no banner needed
 - If WebSearch was unavailable → show NO LIVE SEARCH banner
 
+**Diversity self-check (BLOCKING — must pass before Step 4 rendering):**
+
+Tally the assembled source list (across all 15 sessions) and verify ALL of the following. Print
+this checklist with pass/fail per line:
+
+- [ ] Distinct registrable domains ≥ 15
+- [ ] No domain appears more than 2 times total
+- [ ] No session has two sources from the same domain
+- [ ] Vendor sources (taxonomy category 9, incl. big-lab blogs) ≤ 30% of total AND ≤ 1 per session
+- [ ] Every module spans ≥ 3 taxonomy categories, including ≥ 1 from categories 1–5
+
+If ANY line FAILS, **do not render.** Return to Layer 2 with de-anchored, domain-excluding queries
+(`{technology} … -site:{over-used domain}`) and re-source until it passes. Only if a genuine
+coverage gap remains after a real retry, note the specific unavoidable gap to the user before
+proceeding — never silently ship a curriculum that fails the self-check.
+
+*(If WebSearch was unavailable, this self-check is skipped — the NO LIVE SEARCH banner already
+tells the user sources are model-knowledge only.)*
+
 ---
 
 ## Step 3.5: Combined Link Validation + Content Skimming Pass (Enhancements 1B + 2)
@@ -703,10 +763,27 @@ Scoring rules:
 - SCORE ≥ 7: include
 - SCORE 5-6: include but flag `⚠️ Limited depth — supplement with model knowledge`
 - SCORE < 5: skip (unless it's the only source for this module, then keep with flag)
-- If > 5 sources score ≥ 7 for a single module: keep top 5 by score.
-  Tiebreak: prefer 1 video + ≥ 2 text over all-text.
+- **Do not let fetch difficulty decide diversity:** a 403 (paywall/gate), a browse timeout, or a
+  failed text extraction is NOT grounds to drop an otherwise-credible independent source
+  (categories 1–6) when its title+snippet clearly match the topic. Keep it on snippet-based
+  scoring with the appropriate `⚠️ [content unverified …]` tag rather than silently discarding it
+  in favor of an easier-to-fetch vendor page. (Verification easily culls independent sources and
+  keeps clean vendor blogs — resist that bias.)
+- If > 5 sources score ≥ 7 for a single module: keep the top 5 by score, **subject to the
+  per-session and per-domain caps in the Source Diversity Rule** — never keep two sources from the
+  same domain in one session just because they scored high. If the top-5-by-score would violate a
+  domain cap, skip the duplicate-domain source and promote the next-highest source from a NEW
+  domain (even if it scored 6), so long as it scored ≥ 5.
+  Tiebreak within the cap: prefer a spread across taxonomy categories, then 1 video + ≥ 2 text over all-text.
 
 **Step D — YouTube transcript extraction (Enhancement 2 — video sources):**
+
+> **Best-effort only — expect this to fall back to description-only most of the time.** The
+> DOM selectors below (`[aria-label="More actions"]`, `ytd-transcript-segment-renderer`) track
+> YouTube's private, frequently-changing markup and the transcript panel is often not reachable
+> this way. Do **not** spend time retrying if it fails: on any empty/again result, immediately
+> use the description-only fallback and score from that. Video sourcing quality does not depend
+> on transcript extraction succeeding.
 
 When a YouTube URL (youtube.com/watch?v=...) passes Steps A-C:
 
@@ -847,8 +924,8 @@ Write the full curriculum document following the structure below exactly.
 **Generated:** {current date}
 **Product:** {PRODUCT}
 **Your role:** {ROLE}
-**Total learning time:** ~{N} hours across 15 sessions (15–20 min each)
-**Sessions:** 5 modules × 3 sessions + capstone
+**Total learning time:** ~{N} hours across 15 days (15–20 min each)
+**Sessions:** 13 learning sessions across 5 modules (3 / 2 / 3 / 3 / 2) + capstone on Days 14–15
 
 ---
 
@@ -923,7 +1000,7 @@ or "that changes how I'd think about this."
   "As a {ROLE}, the key takeaway from this session is: {specific action or decision you can
   make differently}. Before reading: {product/feature} means {concrete change}."
 
-**Distribution rule:** Across the 15 sessions, use each frame approximately 5 times (±2).
+**Distribution rule:** Across the 13 learning sessions (Days 1–13), use each frame approximately 4 times (±2).
 Do not use the same frame more than 3 consecutive sessions.
 
 ---
@@ -969,13 +1046,15 @@ plausible — not a generic "companies struggle with..." opener.}
 *Total: ~{total time}; requires {who/what skill is needed}*
 
 Sourcing rule — priority order:
-1. **`[researched — product source]`** Use `current_state_product_evidence` from Layer 1.5
-   Part A when it contains before-state language for this session's topic. Paraphrase
-   or quote directly. This is the most credible source — the product's own description
-   of the problem they solve.
-2. **`[researched — role source]`** Use `current_state_role_evidence` from Layer 1.5
-   Part B when it describes how a {ROLE} handles this workflow today. Paraphrase with
-   the role lens applied.
+1. **`[researched — role source]`** (PREFER THIS) Use `current_state_role_evidence` from
+   Layer 1.5 Part B when it describes how a {ROLE} handles this workflow today. Paraphrase
+   with the role lens applied. Independent role evidence is the more trustworthy account of
+   the before-state.
+2. **`[researched — product source]`** Use `current_state_product_evidence` from Layer 1.5
+   Part A when it contains before-state language for this session's topic. Paraphrase or
+   quote directly. This is useful product-specific *context*, but it is a **vendor source**
+   (counts against the vendor cap) — pair it with an independent role source (priority 1)
+   wherever possible, and never let the vendor's framing stand alone as the whole before-state.
 3. **`[model knowledge]`** Only when Layer 1.5 produced no evidence for this session's
    topic. Must still be specific — name real tools, real steps, real consequences.
    Never use generic placeholders like "manage the process manually."
@@ -1084,6 +1163,13 @@ that should be made on first principles, not A/B testing at the architecture lev
 
 Generate each module with exactly the sessions shown. Populate content from your
 research (Layers 1–4). Use model knowledge to supplement sparse modules.
+
+> **Applying the Source Diversity Rule to the per-session hints below:** where a session lists
+> "neutral" sources, draw each from a **distinct domain** and map it to a taxonomy category (1–8).
+> Across each module, the sources must span **≥ 3 taxonomy categories including ≥ 1 from
+> categories 1–5**, respect the **≤ 2-per-domain** cap, and keep vendor (category 9) at **≤ 1 per
+> session / ≤ 30% overall**. All of this is verified by the BLOCKING Diversity self-check before
+> rendering — a module built from a single domain or all-blogs will fail it.
 
 ---
 
@@ -1242,7 +1328,15 @@ all questions. Each MC question should have a `<details>` answer block.}
 
 ## Step 5: Write Output Files
 
-### Write the curriculum file
+> **Order of operations:** the preferred path is to write **`curriculum.json`** (schema under
+> "Generate output files" below) and run **`build_html.py`**, which produces *all* artifacts —
+> the 15 day HTML files, `manifest.json`, `active-manifest.json`, the quiz tracker, **and
+> `curriculum.md`**. If you use the builder, the two manual steps immediately below
+> ("Write the curriculum file", "Write the quiz results file") are already handled — **skip
+> them.** They (and the manual HTML/manifest templates) are the fallback for environments
+> without the builder or `python3`. In that fallback case, run these two steps by hand.
+
+### Write the curriculum file *(fallback only — the builder writes this)*
 
 ```bash
 CURRICULUM_FILE="$LEARNING_DIR/{PRODUCT_SLUG}-{ROLE_SLUG}-curriculum.md"
@@ -1256,7 +1350,7 @@ Tell the user:
 > Open this file in any markdown reader. Sessions are 15–20 min each.
 > Work through one session at a time — don't rush.
 
-### Write the quiz results file (blank template for tracking)
+### Write the quiz results file (blank template for tracking) *(fallback only — the builder writes this)*
 
 ```bash
 QUIZ_FILE="$LEARNING_DIR/quiz-{PRODUCT_SLUG}-{ROLE_SLUG}-{TIMESTAMP}.md"
@@ -1310,13 +1404,103 @@ Tell the user:
 >
 > Fill this in after each session to track your progress.
 
-### Generate HTML files
+### Generate output files
 
-After writing the `.md` files, generate all HTML output. This step produces **17 files**:
-15 per-day HTML files (the primary delivery artifact), 1 full curriculum reference HTML,
-and 1 manifest JSON for the scheduler.
+All output — the 15 per-day HTML files, `manifest.json`, `active-manifest.json`, the quiz
+tracker, and the human-readable `curriculum.md` — is produced **deterministically by a helper
+script from a single content file you write (`curriculum.json`)**. This replaces hand-authoring
+17 files by hand (the least reliable stage: dropped sections, inconsistent CSS, truncation).
+
+> **Do NOT hand-author the `.md`/HTML files when the builder is available.** Write
+> `curriculum.json` once (schema below), run `build_html.py`, and it emits every artifact with
+> identical, correct structure. The manual templates further down are a **fallback only** for
+> environments without the script or `python3`.
+
+#### Preferred path — deterministic builder (`build_html.py`)
+
+**Step A — Write `curriculum.json`** to `$LEARNING_DIR/{PRODUCT_SLUG}-{ROLE_SLUG}-curriculum.json`
+containing all the content you generated in Step 4, in this shape:
+
+```json
+{
+  "product": "InsForge", "product_slug": "insforge",
+  "role": "Product Manager", "role_slug": "product-manager",
+  "generated": "{ISO 8601 datetime}", "generated_date": "{YYYY-MM-DD}",
+  "start_date": "{YYYY-MM-DD}", "timestamp": "{YYYYMMDD-HHMMSS}",
+  "banner": null,                                  // or "limited_sources" | "no_search"
+  "why_product": "2-3 sentences (inline markdown ok)",
+  "tech_stack": [ { "tech": "RAG", "confidence": "Confirmed|[INFERRED]", "role_in_product": "…" } ],
+  "competitive": {
+    "competitors": ["Comp1", "Comp2"],
+    "rows": [ { "label": "Core AI strength", "product": "…", "values": ["…", "…"] } ],
+    "source": "citation or [Model Knowledge]"
+  },
+  "modules": [
+    { "number": 1, "title": "AI Technology Stack", "day_range": [1, 3],
+      "focus": "1-2 sentences derived from the first & last session what_learn" }
+    // …5 modules; day_range for capstone module ends at 15
+  ],
+  "sessions": [
+    { "day": 1, "session_number": 1, "module": 1,
+      "title": "The Core AI Engine", "minutes": 20,
+      "insight": "session_insight — pick one Day-Summary Frame, all placeholders filled",
+      "what_learn": "one sentence",
+      "key_concepts": [ { "name": "…", "definition": "…" } ],
+      "sources": [ { "title": "…", "url": "https://…", "platform": "arXiv",
+                     "minutes": "15", "summary": "…", "category": 1, "vendor": false } ],
+      "model_knowledge_note": null,                // or a string when sources are sparse
+      "body_md": null,                             // optional extra teaching prose/code (markdown)
+      "applies": {
+        "before_scenario": "one specific sentence",
+        "before_steps": [ { "text": "…", "minutes": "30", "tag": "researched|model knowledge" } ],
+        "before_total": "~50 min; requires …",
+        "with_product": "1-2 sentences",
+        "role_takeaway": "concrete role-specific takeaway"
+      },
+      "quiz": {
+        "q1": { "stem": "…", "options": ["A) …","B) …","C) …","D) …"], "correct": "B", "explanation": "…" },
+        "q2": { "stem": "…", "options": ["A) …","B) …","C) …","D) …"], "correct": "C", "explanation": "…" },
+        "q3": { "prompt": "…", "model_answer": "…" }
+      }
+    }
+    // …sessions 1–13, then the two capstone days:
+    // { "day": 14, "capstone": "mc", "title": "Capstone Quiz — Multiple Choice", "minutes": 20,
+    //   "questions": [ { "stem": "…", "options": ["A)…","B)…","C)…","D)…"], "correct": "A", "explanation": "…" } × 5 ] }
+    // { "day": 15, "capstone": "oe", "title": "Capstone: Open-Ended Questions", "minutes": 15,
+    //   "questions": [ { "prompt": "…", "model_answer": "…" } × 2 ] }
+  ]
+}
+```
+
+Notes: `category` is the taxonomy number (1–9) and `vendor` is `true` for taxonomy category 9 —
+include them so the diversity self-check is auditable. All 15 days (1–13 learning + 14/15 capstone)
+must be present. Inline markdown (`**bold**`, `*italic*`, `` `code` ``, `[label](url)`) is rendered
+safely; put longer prose/code in `body_md`.
+
+**Step B — Locate and run the builder:**
+```bash
+BUILD=""
+for cand in "$LEARNING_DIR/build_html.py" "$LEARNING_DIR/scripts/build_html.py"; do
+  [ -f "$cand" ] && BUILD="$cand" && break
+done
+if [ -n "$BUILD" ] && command -v python3 >/dev/null 2>&1; then
+  python3 "$BUILD" "$LEARNING_DIR/{PRODUCT_SLUG}-{ROLE_SLUG}-curriculum.json" "$LEARNING_DIR"
+fi
+```
+
+If the command **succeeds**, it has written all 15 day HTML files, `{slug}-manifest.json`,
+`active-manifest.json`, the `quiz-{slug}-{timestamp}.md` tracker, and `{slug}-curriculum.md`.
+**Skip the "Fallback" section, the manual Manifest JSON section, and the manual quiz-tracker /
+curriculum-file steps entirely** — they are already done. Proceed to Step 5.5.
+
+If the builder is **absent or errors** (no `scripts/` in a SKILL.md-only install, or no `python3`),
+fall back to hand-authoring using the templates below.
 
 ---
+
+#### Fallback: manual HTML authoring (only if `build_html.py` or `python3` is unavailable)
+
+*Use this section only when Step B above did not run. It reproduces exactly what the builder emits.*
 
 #### CSS template (inline into EVERY HTML file generated)
 
@@ -1376,6 +1560,10 @@ details.answers-block[open] summary::before { content: "▼ "; }
 .coming-next { background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #6366f1; border-radius: 0 8px 8px 0; padding: 14px 18px; margin: 24px 0; }
 .coming-next strong { display: block; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.05em; color: #6366f1; margin-bottom: 4px; }
 .coming-next p { margin: 0; color: #374151; font-size: 0.97em; }
+/* Curriculum map — current-module highlight (theme-aware; no inline colors) */
+tr.current-module { background: #dbeafe; font-weight: 600; }
+tr.current-module td { color: #1e3a8a; }
+.module-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #2563eb; margin-right: 6px; vertical-align: middle; }
 @media (prefers-color-scheme: dark) {
   body { color: #e5e7eb; background: #111827; }
   h2 { border-color: #374151; }
@@ -1398,6 +1586,9 @@ details.answers-block[open] summary::before { content: "▼ "; }
   .coming-next { background: #1e1b4b; border-color: #374151; border-left-color: #818cf8; }
   .coming-next strong { color: #818cf8; }
   .coming-next p { color: #d1d5db; }
+  tr.current-module { background: #1e3a5f; }
+  tr.current-module td { color: #dbeafe; }
+  .module-dot { background: #60a5fa; }
 }
 @media print { nav#top-nav { display: none; } body { font-size: 12pt; max-width: 100%; padding: 0; } a { color: #000; } }
 @media (max-width: 480px) { body { font-size: 16px; padding: 12px; } h1 { font-size: 1.5em; } table { font-size: 0.8em; } }
@@ -1405,7 +1596,7 @@ details.answers-block[open] summary::before { content: "▼ "; }
 
 ---
 
-#### Per-day HTML files (primary delivery artifact)
+#### Per-day HTML files *(fallback authoring — the builder emits these; hand-author only if the builder is unavailable)*
 
 Generate all 15 day files sequentially. Write each file before generating the next.
 The scheduler delivers one file per day.
@@ -1496,10 +1687,10 @@ Table cells wrap naturally — do NOT apply any character truncation.
 <table style="font-size:.82em;margin:0 0 20px 0;">
 <thead><tr><th>Module</th><th>Days</th><th>Focus</th></tr></thead>
 <tbody>
-  <!-- current module row has style="background:#dbeafe;font-weight:600;" and a blue dot indicator -->
-  <!-- inactive rows have no background style -->
-  <tr style="background:#dbeafe;font-weight:600;">
-    <td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#2563eb;margin-right:6px;vertical-align:middle;"></span>Module 1: AI Technology Stack</td>
+  <!-- current module row uses class="current-module" (defined in the CSS, dark-mode aware) plus a blue dot indicator -->
+  <!-- inactive rows have no class -->
+  <tr class="current-module">
+    <td><span class="module-dot"></span>Module 1: AI Technology Stack</td>
     <td style="white-space:nowrap;">1–3</td>
     <td>{first session what_learn} {last session what_learn}</td>
   </tr>
@@ -1695,7 +1886,7 @@ plain HTML paragraphs — the Current state list, With {PRODUCT} paragraph, and 
 
 <div class="complete-banner">
   🎉 <strong>Course complete!</strong><br>
-  You've finished all 15 sessions of your {PRODUCT} curriculum as a {ROLE}.<br>
+  You've finished all 15 days of your {PRODUCT} curriculum as a {ROLE}.<br>
   <small>Review your weak areas in the quiz tracker, then revisit those sessions.</small>
 </div>
 ```
@@ -1760,7 +1951,7 @@ Tell the user:
 
 ---
 
-#### Manifest JSON (scheduler reads this)
+#### Manifest JSON (scheduler reads this) *(fallback only — the builder writes this)*
 
 ```bash
 MANIFEST_FILE="$LEARNING_DIR/{PRODUCT_SLUG}-{ROLE_SLUG}-manifest.json"
@@ -1800,7 +1991,7 @@ Tell the user:
 >
 > Scheduler reads `days[N-1].file` to deliver today's content.
 
-#### Active manifest pointer
+#### Active manifest pointer *(fallback only — the builder writes this)*
 
 After writing the manifest, also write an explicit active-manifest pointer:
 
@@ -1823,12 +2014,18 @@ or newly generated curriculum from accidentally hijacking the next scheduled ema
 
 ### Step 5.5: Delivery Automation Setup
 
-**Runs on every curriculum generation.** Regenerates `deliver.py` and the launchd plist
-with the latest profile settings, then reloads the scheduler. The `.smtp-config.json`
+**SKIP THIS ENTIRE STEP if `delivery_email` is `null`** (the user opted out of email in Q4).
+Do not generate `deliver.py`, do not create a launchd plist, and do not install any scheduler.
+Simply tell the user their day files are ready to open under `~/.agents/skills/ai-learning/`.
+The user can turn email on later by saying "update delivery".
+
+**Otherwise, runs on every curriculum generation.** Regenerates `deliver.py` and the launchd
+plist with the latest profile settings, then reloads the scheduler. The `.smtp-config.json`
 is **never** overwritten (preserves credentials).
 
-Read `delivery_email` and `delivery_time` from the loaded profile. If either is missing,
-run Q4 and Q5 now (same questions as Step 0), save to profile, then continue.
+Read `delivery_email` and `delivery_time` from the loaded profile. If either key is **absent**
+(legacy profile, not opted-out), run Q4 and Q5 now (same questions as Step 0), save to profile,
+then continue.
 
 #### 5.5a — Generate `deliver.py`
 
@@ -1871,9 +2068,9 @@ try:
     config = load(smtp_config_path)
     profile = load(LEARNING_DIR / ".user-profile.json")
 
-    if "delivery_email" not in profile:
-        msg = "delivery_email not set in profile. Run 'update delivery' to configure."
-        print(msg); log(msg); sys.exit(1)
+    if not profile.get("delivery_email"):
+        msg = "Email delivery is off for this profile (no delivery_email set). Run 'update delivery' to enable it."
+        print(msg); log(msg); sys.exit(0)
 
     # Prefer explicit active curriculum; fall back to newest manifest for legacy installs.
     active_pointer = LEARNING_DIR / "active-manifest.json"
@@ -1940,12 +2137,12 @@ try:
         issues.append(f"too short: {word_count} words (minimum {min_words})")
     required = ["quiz", "answer"]
     if not is_capstone:
-        required += ["key concepts", "sources", "implementation", "release checkpoint"]
+        required += ["key concepts", "sources"]
     issues.extend([f"missing required section: {s}" for s in required if s not in lowered])
     if '<div id="quiz-section"' not in html_content:
         issues.append("missing quiz-section HTML block")
-    if '<div id="answer-section"' not in html_content:
-        issues.append("missing answer-section HTML block")
+    if 'answers-block' not in html_content:
+        issues.append("missing answers-block HTML block")
     if issues:
         msg = f"Quality gate failed for {html_file.name}; email not sent. Issues: {'; '.join(issues)}"
         print(msg); log(msg); sys.exit(1)
@@ -2015,7 +2212,8 @@ SMTP_CONFIG="$HOME/.agents/skills/ai-learning/.smtp-config.json"
 
 Add `.smtp-config.json` to `$HOME/.agents/skills/ai-learning/.gitignore` (create if missing):
 ```bash
-echo ".smtp-config.json" >> "$HOME/.agents/skills/ai-learning/.gitignore"
+GI="$HOME/.agents/skills/ai-learning/.gitignore"
+grep -qxF ".smtp-config.json" "$GI" 2>/dev/null || echo ".smtp-config.json" >> "$GI"
 ```
 
 #### 5.5c — Generate and load launchd plist
@@ -2161,7 +2359,7 @@ Print a summary in this format:
    1. The scheduler delivers one day file per day to your device
       OR manually AirDrop day-01.html to start, then request next days
    2. Do ONE session per day — 15–20 min
-   3. Answer quiz questions, then tap "Done for today →" to reveal answers
+   3. Answer the quiz questions on your own, then scroll down to the answers block to check them
    4. Log your scores in the quiz tracker
    5. After the capstone (Days 14–15), note your weak areas and review those sessions
    6. To take a quiz interactively: tell the bot "quiz me on session N"
@@ -2287,4 +2485,4 @@ These features are planned for future versions:
 *  V2: `~/.gstack/projects/ai-learning/kiba-main-design-20260405-082226.md`*
 *  V3: `~/.gstack/projects/ai-learning/kiba-main-design-20260405-232236.md`*
 *Test plan: `~/.gstack/projects/ai-learning/kiba-main-eng-review-test-plan-20260405-084353.md`*
-*Skill version: V3 — dynamic day summaries (framed), learner profile + calibration quiz, per-day HTML files, quiz reveal, richer examples, OpenClaw quiz mode*
+*Skill version: 1.0.0 — dynamic day summaries (framed), learner profile + calibration quiz, per-day HTML files, email-safe always-open answers, richer examples, OpenClaw quiz mode*

@@ -6,7 +6,7 @@ An agent skill for **Cursor**, **Claude Code**, and other Claude-powered tools. 
 
 ## 1. What is AI Learning (this skill)?
 
-**AI Learning** here means: a structured curriculum that teaches you how a *real* AI product works—its stack, competitors, and how your job function fits—using **live research**, **curated sources**, and **daily-sized sessions** (about 15–20 minutes each).
+**AI Learning** here means: a structured curriculum that teaches you how a *real* AI product works—its stack, competitors, and how your job function fits—using **live web research** (when a web-search tool is available), **credible, diverse sources**, and **daily-sized sessions** (about 15–20 minutes each). Deeper link-validation and content-skimming run only when the optional `browse` binary is present; without it, sources are selected from search titles/snippets and clearly flagged as unverified.
 
 You choose:
 
@@ -29,7 +29,7 @@ The skill produces materials grounded in that product—not a generic “intro t
 | **Dynamic day summaries** | Each day’s “what today is about” reflects real session content |
 | **Curriculum map** | Table of modules with Focus lines derived from your session goals |
 | **“Coming up next”** | Preview of the next day at the bottom of each HTML page |
-| **Source diversity** | Prioritizes neutral / third-party sources; product docs used sparingly; enough sources to *learn*, not a fixed count |
+| **Source diversity** | Draws from a 9-category credible-source taxonomy (academic, specs, journalism, courses, educational, independent blogs, video, hands-on, vendor); hard caps enforce ≥15 distinct domains, ≤2 sources/domain, and vendor ≤30% — verified by a blocking self-check before the curriculum renders |
 | **Manifest + optional email** | `manifest.json` drives which day to open; macOS users can set up **daily SMTP email** (see `SKILL.md` Step 5.5) |
 | **Preferences you can change** | Full profile or delivery-only updates without regenerating everything by hand |
 
@@ -142,9 +142,13 @@ The skill updates **`~/.agents/skills/ai-learning/.user-profile.json`** (local f
 
 Under **`~/.agents/skills/ai-learning/`** (exact names depend on product/role slug):
 
-- `*-day-01.html` … `*-day-15.html` — daily sessions  
-- `*-manifest.json` — scheduler / delivery index  
-- Optional: `*.md` curriculum reference, quiz tracker
+- `*-curriculum.json` — structured content source (the skill writes this; `scripts/build_html.py` renders everything below from it)
+- `*-day-01.html` … `*-day-15.html` — daily sessions
+- `*-manifest.json` + `active-manifest.json` — scheduler / delivery index
+- `*-curriculum.md` — human-readable study guide
+- `quiz-*.md` — quiz tracker
+
+HTML/manifests/tracker/curriculum are produced deterministically by **`scripts/build_html.py`** from the single `*-curriculum.json`, so structure is identical every run. Environments without the script or `python3` fall back to inline generation.
 
 ---
 
