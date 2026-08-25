@@ -14,8 +14,14 @@ The model writes prose ONCE as JSON; this script guarantees the canonical CSS sh
 email-safe (JS-free, always-open answers) quiz blocks, dark-mode-aware curriculum map,
 and the exact section markers the delivery quality gate checks for. No third-party deps.
 
-NOTE: This file is the authoritative copy embedded in SKILL.md (Step 5). The copy in
-scripts/ is a tested mirror — keep the two in sync.
+It also enforces the mechanism-first P0 gates (validate_p0): before writing any file it
+refuses (non-zero exit) a curriculum that assigns a legal/pricing/home/README page as a
+learner source, omits the Day-1 end-to-end trace, or ships an ill-formed mechanism_map.
+A curriculum with no mechanism_map builds in a backward-compatible "legacy" mode.
+
+NOTE: This is the authoritative builder. SKILL.md Step 5 documents the curriculum.json
+schema and invokes this file; the CSS/markup here mirror SKILL.md's fallback templates —
+keep them in sync. See scripts/test_build.py for the P0 enforcement tests.
 
 Usage:
     python3 build_html.py [curriculum.json] [output_dir]
@@ -27,6 +33,7 @@ import os
 import re
 import json
 import html
+from urllib.parse import urlparse
 
 
 # --------------------------------------------------------------------------- #
@@ -116,6 +123,28 @@ tr.current-module td { color: #1e3a8a; }
   tr.current-module { background: #1e3a5f; }
   tr.current-module td { color: #dbeafe; }
   .module-dot { background: #60a5fa; }
+}
+/* Mechanism-first: end-to-end trace, confidence badges, callouts, lesson contract */
+.mechanism-trace { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 18px 12px 20px; margin: 12px 0 20px; }
+.mechanism-trace ol { margin: 0; padding-left: 1.4em; } .mechanism-trace li { margin-bottom: 8px; }
+.confidence-list { list-style: none; padding-left: 0; margin: 8px 0 16px; }
+.confidence-list li { margin-bottom: 8px; line-height: 1.5; }
+.badge { display: inline-block; font-size: 0.68em; font-weight: 700; letter-spacing: 0.03em; padding: 2px 7px; border-radius: 4px; margin-right: 8px; vertical-align: middle; text-transform: uppercase; }
+.badge-confirmed { background: #dcfce7; color: #166534; }
+.badge-inferred { background: #fef9c3; color: #854d0e; }
+.badge-unknown { background: #fee2e2; color: #991b1b; }
+.callout { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 10px 14px; margin: 16px 0; border-radius: 0 6px 6px 0; font-size: 0.97em; }
+.lesson-contract { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; margin: 16px 0; }
+.lesson-contract p { margin: 6px 0; font-size: 0.95em; }
+.source-why { color: #6b7280; font-style: italic; }
+@media (prefers-color-scheme: dark) {
+  .mechanism-trace { background: #1e3a5f; border-color: #3b82f6; }
+  .badge-confirmed { background: #14532d; color: #bbf7d0; }
+  .badge-inferred { background: #422006; color: #fde68a; }
+  .badge-unknown { background: #450a0a; color: #fecaca; }
+  .callout { background: #422006; border-left-color: #f59e0b; color: #fde68a; }
+  .lesson-contract { background: #1e1b4b; border-color: #374151; }
+  .source-why { color: #9ca3af; }
 }
 @media print { nav#top-nav { display: none; } body { font-size: 12pt; max-width: 100%; padding: 0; } a { color: #000; } }
 @media (max-width: 480px) { body { font-size: 16px; padding: 12px; } h1 { font-size: 1.5em; } table { font-size: 0.8em; } }"""
@@ -328,6 +357,8 @@ def render_day_summary(session):
 
 def render_sources(session):
     srcs = session.get("sources") or []
+    # Honor an explicit reading_order when present; keep original order otherwise.
+    srcs = sorted(srcs, key=lambda s: s.get("reading_order", 1e9))
     parts = ["<h3>Sources</h3>"]
     if srcs:
         parts.append("<ul>")
@@ -344,7 +375,9 @@ def render_sources(session):
                 link = label
             summ = (" — %s" % inline_md(s["summary"])) if s.get("summary") else ""
             tail = (" (%s)" % meta) if meta else ""
-            parts.append("  <li>%s%s%s</li>" % (link, tail, summ))
+            why = (' <span class="source-why">— why: %s</span>' % inline_md(s["why_it_matters"])) \
+                if s.get("why_it_matters") else ""
+            parts.append("  <li>%s%s%s%s</li>" % (link, tail, summ, why))
         parts.append("</ul>")
     if session.get("model_knowledge_note"):
         parts.append("<blockquote><strong>[Model Knowledge]</strong> %s <em>— generated "
@@ -507,6 +540,194 @@ def render_capstone_oe(session):
 
 
 # --------------------------------------------------------------------------- #
+# Mechanism-first renderers (P0)
+# --------------------------------------------------------------------------- #
+def render_mechanism_trace(c, session):
+    """Day 1: the end-to-end trace + confirmed/inferred/unknown summary + residual human work."""
+    parts = []
+    trace = session.get("end_to_end_trace") or []
+    if trace:
+        parts.append("<h2>How %s works, end to end</h2>" % esc(c["product"]))
+        parts.append('<div class="mechanism-trace">\n  <ol>')
+        for step in trace:
+            parts.append("    <li>%s</li>" % inline_md(step))
+        parts.append("  </ol>\n</div>")
+    mm = c.get("mechanism_map") or []
+    if mm:
+        parts.append("<h3>What we know — confirmed, inferred, unknown</h3>")
+        parts.append('<ul class="confidence-list">')
+        for m in mm:
+            ev = m.get("evidence") or {}
+            conf = (ev.get("confidence") or "unknown").lower()
+            if conf not in ("confirmed", "inferred", "unknown"):
+                conf = "unknown"
+            claim = m.get("product_promise") or m.get("learner_question") or ""
+            parts.append('  <li><span class="badge badge-%s">%s</span>%s</li>'
+                         % (conf, conf, inline_md(claim)))
+        parts.append("</ul>")
+    if session.get("residual_human_work"):
+        parts.append('<div class="callout"><strong>Still owned by a human:</strong> %s</div>'
+                     % inline_md(session["residual_human_work"]))
+    return "\n".join(parts)
+
+
+def render_lesson_contract(session):
+    """Days 1–5: the structured lesson contract (artifact / counterfactual / autonomy / decision)."""
+    fields = [("artifact", "Concrete artifact"),
+              ("counterfactual", "The old way (before this product)"),
+              ("autonomy_boundary", "Automated vs. still human"),
+              ("role_decision", "Your decision as a %s" % esc(session.get("role_name", "practitioner")))]
+    present = [(lbl, session[k]) for k, lbl in fields if str(session.get(k, "")).strip()]
+    if not present:
+        return ""
+    parts = ['<div class="lesson-contract">']
+    for lbl, val in present:
+        parts.append("  <p><strong>%s:</strong> %s</p>" % (lbl, inline_md(val)))
+    parts.append("</div>")
+    return "\n".join(parts)
+
+
+# --------------------------------------------------------------------------- #
+# P0 validation gates — build FAILS (non-zero exit) on a hard violation.
+# The whole point: a skipped mechanism trace or a Terms link assigned as a
+# learner source breaks the build instead of shipping silently.
+# --------------------------------------------------------------------------- #
+_EXCLUDE_PATTERNS = [
+    (r"/terms(?:[-_](?:of[-_](?:service|use)|and[-_]conditions))?/?$", "Terms of Service"),
+    (r"/tos/?$", "Terms of Service"),
+    (r"/privacy(?:[-_]policy)?/?$", "Privacy policy"),
+    (r"/legal/?$", "Legal page"),
+    (r"/(?:pricing|plans)/?$", "Pricing page"),
+    (r"/careers?/?$", "Careers page"),
+    (r"/jobs?/?$", "Jobs page"),
+    (r"/readme(?:\.md)?/?$", "Generic README"),
+]
+
+
+def excluded_reason(url):
+    """Return a human label if this URL is a discovery-only page type, else None."""
+    if not url:
+        return None
+    try:
+        p = urlparse(url)
+    except ValueError:
+        return None
+    if p.scheme not in ("http", "https"):
+        return None
+    path = (p.path or "").rstrip("/").lower()
+    if path == "":
+        return "Homepage / root URL"
+    for rx, label in _EXCLUDE_PATTERNS:
+        if re.search(rx, path):
+            return label
+    return None
+
+
+def _independent_support(claim_id, sessions):
+    """True if some learner-facing source supporting claim_id is an independent check."""
+    for s in sessions:
+        for src in (s.get("sources") or []):
+            if src.get("supports_claim") == claim_id and \
+               src.get("role") in ("independent_validation", "tradeoff_evidence"):
+                return True
+    return False
+
+
+def validate_p0(c):
+    """Return (errors, warnings). Errors fail the build; warnings are advisory."""
+    errors, warnings = [], []
+    sessions = c.get("sessions", [])
+    by_day = {s.get("day"): s for s in sessions}
+
+    # (1) Exclusion denylist on learner-facing sources — ALWAYS enforced.
+    for s in sessions:
+        for src in (s.get("sources") or []):
+            if src.get("topic_exception"):
+                continue
+            title = src.get("title") or src.get("url") or "source"
+            if src.get("role") == "excluded_type":
+                errors.append("Day %s: source \"%s\" is role 'excluded_type' but assigned as "
+                              "learner-facing. Move it to mechanism_map evidence, or drop it."
+                              % (s.get("day"), title))
+                continue
+            reason = excluded_reason(src.get("url", ""))
+            if reason:
+                errors.append("Day %s: %s (%s) assigned as a learner source. Legal/pricing/home/"
+                              "README pages are discovery-only — move to mechanism_map evidence, or "
+                              "set \"topic_exception\": true if this lesson is genuinely about it."
+                              % (s.get("day"), reason, src.get("url", "")))
+
+    # Mechanism-first mode is signalled by the presence of mechanism_map.
+    mm = c.get("mechanism_map")
+    if not mm:
+        warnings.append("No mechanism_map present — building in LEGACY mode (mechanism-first gates "
+                        "skipped). New curricula should include a mechanism_map of 3–5 claims.")
+        return errors, warnings
+
+    progression = (c.get("progression") or "mechanism_first").lower()
+
+    # (2) mechanism_map shape.
+    if not (3 <= len(mm) <= 5):
+        errors.append("mechanism_map must have 3–5 entries (found %d)." % len(mm))
+    req = ["learner_question", "product_promise", "observable_behavior", "mechanism",
+           "traditional_counterfactual", "autonomy_boundary", "failure_mode"]
+    for i, m in enumerate(mm, 1):
+        mid = m.get("id") or ("m%d" % i)
+        for f in req:
+            if not str(m.get(f, "")).strip():
+                errors.append("mechanism_map[%s]: missing required field '%s'." % (mid, f))
+        ev = m.get("evidence") or {}
+        conf = (ev.get("confidence") or "").lower()
+        if conf not in ("confirmed", "inferred", "unknown"):
+            errors.append("mechanism_map[%s]: evidence.confidence must be "
+                          "confirmed|inferred|unknown (got %r)." % (mid, ev.get("confidence")))
+        if conf == "confirmed" and not ev.get("urls"):
+            errors.append("mechanism_map[%s]: marked 'confirmed' but carries no evidence URL. "
+                          "Add a source or downgrade to 'inferred'." % mid)
+        if m.get("high_impact"):
+            if conf == "confirmed" and not _independent_support(mid, sessions) \
+                    and ev.get("independently_verified") is not False:
+                warnings.append("mechanism_map[%s]: high-impact claim marked 'confirmed' without an "
+                                "independent (role=independent_validation/tradeoff_evidence) source. "
+                                "Add corroboration or set evidence.independently_verified=false." % mid)
+
+    # (3) Day 1 contract — hard requirements in mechanism-first mode.
+    d1 = by_day.get(1)
+    if d1 is not None and not d1.get("capstone"):
+        trace = d1.get("end_to_end_trace")
+        if not (isinstance(trace, list) and trace):
+            errors.append("Day 1 (mechanism-first) requires a non-empty 'end_to_end_trace' list.")
+        for f in ("residual_human_work", "role_decision"):
+            if not str(d1.get(f, "")).strip():
+                errors.append("Day 1 requires '%s'." % f)
+
+    # (4) Days 1–5 lesson contract — HARD-required in mechanism_first mode (the six-question gate),
+    #     advisory in 'standard' progression.
+    sink = errors if progression == "mechanism_first" else warnings
+    for day in range(1, 6):
+        s = by_day.get(day)
+        if not s or s.get("capstone"):
+            continue
+        for f in ("artifact", "counterfactual", "autonomy_boundary", "role_decision"):
+            if not str(s.get(f, "")).strip():
+                sink.append("Day %d missing lesson-contract field '%s' (required in mechanism_first "
+                            "progression)." % (day, f))
+
+    # (5) Claim-type-aware vendor cap — computed over the NON-mechanism source pool only.
+    non_mech = [src for s in sessions for src in (s.get("sources") or [])
+                if src.get("role") not in ("mechanism_evidence", "workflow_evidence")]
+    if non_mech:
+        vendors = sum(1 for x in non_mech if x.get("vendor"))
+        share = vendors / len(non_mech)
+        if share > 0.30:
+            warnings.append("Vendor share of the non-mechanism source pool is %.0f%% (>30%%). "
+                            "Mechanism/workflow sources are exempt from the cap; add independent "
+                            "sources for the 'does it work / tradeoff' claims." % (share * 100))
+
+    return errors, warnings
+
+
+# --------------------------------------------------------------------------- #
 # Page assembly
 # --------------------------------------------------------------------------- #
 def html_shell(product, day, title, body):
@@ -547,6 +768,10 @@ def build_day_html(c, session, modules, next_session):
 
     # Regular learning day
     body_parts.append(render_day_summary(session))
+    if day == 1:
+        body_parts.append(render_mechanism_trace(c, session))
+    if day <= 5:
+        body_parts.append(render_lesson_contract(session))
     if session.get("body_md"):
         body_parts.append(block_md(session["body_md"]))
     body_parts.append(render_sources(session))
@@ -632,6 +857,28 @@ def curriculum_md(c):
             L.append("")
             L.append("*Source: %s*" % comp["source"])
         L.append("")
+    mm = c.get("mechanism_map")
+    if mm:
+        L.append("## How %s Works — Mechanism Map" % c["product"])
+        L.append("")
+        L.append("*Built before any lesson: each claim traced to evidence and labeled "
+                 "confirmed / inferred / unknown.*")
+        L.append("")
+        for i, m in enumerate(mm, 1):
+            ev = m.get("evidence") or {}
+            conf = (ev.get("confidence") or "unknown").lower()
+            L.append("### Claim %d: %s" % (i, m.get("product_promise", m.get("learner_question", ""))))
+            L.append("")
+            L.append("- **Learner question:** %s" % m.get("learner_question", ""))
+            L.append("- **Observable behavior:** %s" % m.get("observable_behavior", ""))
+            L.append("- **Mechanism:** %s" % m.get("mechanism", ""))
+            L.append("- **The old way:** %s" % m.get("traditional_counterfactual", ""))
+            L.append("- **Automated vs. human:** %s" % m.get("autonomy_boundary", ""))
+            L.append("- **Failure mode:** %s" % m.get("failure_mode", ""))
+            note = (" — %s" % ev.get("note", "")) if ev.get("note") else ""
+            urls = ", ".join(ev.get("urls", []) or [])
+            L.append("- **Evidence (%s):** %s%s" % (conf, urls or "—", note))
+            L.append("")
     L.append("---")
     L.append("")
     for s in c["sessions"]:
@@ -757,6 +1004,21 @@ def main():
     for key in ("product", "role", "product_slug", "role_slug", "sessions"):
         if key not in c:
             sys.exit("build_html.py: curriculum.json missing required key: %s" % key)
+
+    # ---- P0 validation gates (mechanism-first + source discipline) ----
+    errors, warnings = validate_p0(c)
+    if c.get("mechanism_map"):
+        mode = (c.get("progression") or "mechanism_first").lower()
+    else:
+        mode = "legacy"
+    print("build_html.py: gate (%s mode) — %d error(s), %d warning(s)"
+          % (mode, len(errors), len(warnings)))
+    for w in warnings:
+        print("  [warn] %s" % w)
+    if errors:
+        for e in errors:
+            print("  [FAIL] %s" % e)
+        sys.exit("build_html.py: refusing to build — fix the P0 errors above.")
 
     slug = "%s-%s" % (c["product_slug"], c["role_slug"])
     modules = c.get("modules", [])

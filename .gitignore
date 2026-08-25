@@ -32,5 +32,14 @@ smtp-config.json
 .smtp-config.json
 .user-profile.json
 
+# Python build artifacts
+__pycache__/
+*.pyc
+
 # Internal backlog — keep local only (not published with the repo)
 TODOS.md
+
+# Test fixtures are part of the repo — exempt them from the generated-output
+# patterns above (e.g. *-curriculum.json would otherwise swallow them).
+!scripts/fixtures/
+!scripts/fixtures/**

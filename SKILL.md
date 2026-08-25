@@ -331,6 +331,21 @@ Ask the user (plain text, not AskUserQuestion):
 
 **Store the product name as `PRODUCT`.**
 
+### Learning intent (optional — sets the progression)
+
+After the product name, ask one short follow-up (plain text):
+
+> **What do you most want to get out of this?**
+> (a) how it works end to end · (b) product strategy · (c) how to build a comparable product · (d) evaluation & metrics
+> *(Press enter to accept the default — how it works end to end.)*
+
+Map the answer to `progression` (used in Step 5's `curriculum.json`):
+- **(a)** or no answer → `mechanism_first` (**default when a product is supplied**).
+- **(c)** → `mechanism_first`, and weight Module 4 (How to Build) more heavily.
+- **(b)** or **(d)** → `standard` progression, but still build the `mechanism_map` and keep Day 1 as the end-to-end trace; bias later sessions toward strategy (b) or eval/metrics (d).
+
+When the product is niche or unfamiliar, prefer `mechanism_first` regardless — that's when understanding the mechanism matters most.
+
 Generate the product slug:
 - Lowercase the product name
 - Replace spaces with hyphens
@@ -425,12 +440,33 @@ Include **as many sources as needed for a learner to fully understand the sessio
 - **Per-session domain rule:** Within a single session, **no two sources may share a domain** (unless the session legitimately has only one source total).
 - **Minimum distinct domains:** The full curriculum must cite **at least 15 distinct domains** (~one new domain per session). If below 15 after assembly, the curriculum FAILS the self-check — go back to Layer 2 with de-anchored, domain-excluding queries to find more.
 - **Content-type mix (per module of 2–3 sessions):** Each module must include sources from **at least 3 of the 9 taxonomy categories**, including **at least one from categories 1–5** (academic / spec / journalism / course / reputable-educational). A module built only from blogs + vendor FAILS.
-- **Vendor cap (hard):** Product-owned sources (taxonomy category 9, **including big-lab corporate blogs**) must be **≤ 30% of total sources** AND **≤ 1 per session**. A session may use a second vendor source only if it also carries ≥ 2 non-vendor sources.
+- **Vendor cap (hard, claim-type-aware):** The ≤ 30% vendor cap and ≤ 1-per-session limit apply to the **non-mechanism source pool** — sources proving *"does it work / is it worth it / what fails"* (roles `tradeoff_evidence`, `independent_validation`, `context_discovery`). Sources proving *"how it works"* (roles `mechanism_evidence`, `workflow_evidence`) are **required** for product-unique mechanism lessons and are **exempt from the cap** — the product's own docs are the right source for its own mechanism. Big-lab corporate blogs still count as vendor. (See **Source roles & the claim-type split** below; the builder computes this cap over the non-mechanism pool.)
 - **Widely-documented technologies rule:** For any session covering a technology with rich independent literature (e.g., MCP, PostgreSQL, TypeScript, Transformer architecture, embeddings, LLMs, REST APIs), at least one source MUST be from taxonomy **category 1 or 2** (canonical paper / official spec) — never the vendor's own take.
 - **Fallback:** If a topic genuinely lacks non-vendor coverage after a real retry, use what's available and add: `⚠️ Limited neutral coverage for this topic — supplement with your own current search.`
 - Role-specific sources are mandatory in Module 3 (Your Role), Module 5 (Day-in-Life), and any session where the quiz's Q3 asks the learner to apply role judgment.
 
 **Rationale:** A learner studying a product through their job function lens needs to understand the underlying technology independently — not just through the vendor's narrative. A PM learning about MCP from only the InsForge blog learns InsForge's take on MCP, not MCP itself.
+
+### Source roles & the claim-type split (classify every source before assigning it)
+
+The diversity caps above prevent over-reliance on the vendor for *judgment*, but a mechanism lesson genuinely needs the product's own docs. Reconcile the two by tagging every source with a **role** and letting the role decide the rule. Set `"role"` on each source in `curriculum.json`:
+
+| Role | What it proves | Learner-facing? | Counts against vendor cap? |
+|------|----------------|-----------------|----------------------------|
+| `mechanism_evidence` | *How it works* — architecture/API docs, code, technical walkthroughs | Primary reading | **No** (required for mechanism lessons) |
+| `workflow_evidence` | *How you use it* — onboarding, demos, concrete case studies | Primary reading | **No** |
+| `tradeoff_evidence` | *Why this approach, what it costs* | Primary reading | Yes |
+| `independent_validation` | *Does it actually work* — independent corroboration, market context, limitations | **Required** for high-impact claims | Yes |
+| `context_discovery` | Background only, unless it carries unique instructional value | Internal only | Yes |
+| `excluded_type` | Legal/policy, pricing, generic home page, generic README, careers, directory/listing | **Never** (build fails) | — |
+
+**Exclusion rule (enforced by the builder — build FAILS otherwise):** Never assign a Terms/privacy/legal page, pricing/plans page, generic homepage/root URL, generic README, or careers/jobs page as a **learner-facing source**. Read them for evidence if useful (put such URLs under `mechanism_map[].evidence.urls`, which is internal), but do not list them in a session's `sources`. The only exception is a lesson genuinely *about* that subject (e.g. a pricing-strategy session) — set `"topic_exception": true` on that one source.
+
+**Claim-type rule:**
+- Every **"how it works"** (mechanism/workflow) claim → **at least one** `mechanism_evidence` or `workflow_evidence` source (product docs welcome, cap-exempt).
+- Every **high-impact** claim (money, deployment, safety/security, accuracy, growth/performance) → **independent corroboration** (`independent_validation` / `tradeoff_evidence`), **or** an explicit *"not independently verified"* label (`mechanism_map` entry with `"high_impact": true` and `evidence.independently_verified: false`).
+
+Optional per-source fields the builder uses: `"supports_claim"` (a `mechanism_map` id), `"why_it_matters"` (one line shown after the source), `"reading_order"` (integer — sources render in this order).
 
 ---
 
@@ -835,6 +871,35 @@ If `$B` unavailable for the entire pass:
 
 ---
 
+## Step 3.75: Learning Thesis + Mechanism Map (BUILD BEFORE Step 4)
+
+**Mandatory synthesis step between research and generation.** Its purpose is to force an *explanation* of how the product works before any lesson is written — the failure mode this skill exists to prevent is collecting links without forming an explanation (e.g. assigning a Terms page and generic AI articles instead of "here's how the product turns input into its promised outcome"). Do not skip to Step 4 with only a list of sources.
+
+Pick the product's **3–5 most distinctive claims** and, for each, complete this map. Write it into `curriculum.json` as `mechanism_map` (schema in Step 5). Capture the **Mechanism field at engineer-grade depth every time** — lighter roles teach a shallower version from it, but capturing deep keeps the factual core reusable and honest.
+
+| Field | Required content |
+|---|---|
+| `learner_question` | A concrete question the learner would naturally ask. |
+| `product_promise` | The user-visible result the product claims. |
+| `observable_behavior` | What an observer can actually see it do. |
+| `mechanism` | Components, integrations, state, artifacts, and the sequence of handoffs (deepest role's depth). |
+| `traditional_counterfactual` | What people/tools normally do without the product. |
+| `autonomy_boundary` | What is automated, pre-authorized, human-approved, or still unknown. |
+| `failure_mode` | What can go wrong and how the product should surface or control it. |
+| `evidence` | `{ "urls": […], "note": "2–4 sentences", "confidence": "confirmed" \| "inferred" \| "unknown" }` |
+
+Rules the builder enforces (build **fails** otherwise):
+- 3–5 entries; every field above non-empty.
+- `evidence.confidence` is exactly `confirmed`, `inferred`, or `unknown`. A `confirmed` claim **must** carry at least one `evidence.urls` entry — otherwise downgrade to `inferred`. Never fabricate an architecture; label a guess `inferred` and a gap `unknown`.
+- Mark money/deployment/safety/accuracy/growth claims `"high_impact": true`; each needs independent corroboration or `evidence.independently_verified: false` (see the claim-type rule in Step 3).
+- Legal/pricing/home/README URLs may appear **only** here under `evidence.urls` (internal), never as a learner-facing session source.
+
+**Day 1 is generated from this map.** Day 1 must answer *"How does this product turn its user input into its promised outcome, end to end?"* — a numbered `end_to_end_trace`, the human-owned `residual_human_work`, and a `role_decision`. Days 1–5 should each carry the lesson contract (`artifact`, `counterfactual`, `autonomy_boundary`, `role_decision`). Generic AI concepts appear only to explain a step in the product trace — they must not fill the lesson.
+
+*(If WebSearch/browse were unavailable, still build the map from model knowledge, but mark every claim `inferred`/`unknown` and keep the NO LIVE SEARCH banner.)*
+
+---
+
 ## Step 4: Generate the Curriculum
 
 ### Learner Profile Injection
@@ -1171,9 +1236,25 @@ research (Layers 1–4). Use model knowledge to supplement sparse modules.
 > session / ≤ 30% overall**. All of this is verified by the BLOCKING Diversity self-check before
 > rendering — a module built from a single domain or all-blogs will fail it.
 
+#### Progression: mechanism-first (default) vs. standard
+
+Set `"progression"` in `curriculum.json`. **When a product is supplied, default to `"mechanism_first"`** (also the default whenever a `mechanism_map` is present). Use `"standard"` only when the learner explicitly wants a broad topic survey rather than *this* product's mechanism (see the Step 2 learning-intent question).
+
+**`mechanism_first` — Days 1–5 lead with how the product actually works** (Days 6–15 are unchanged). Rename Modules 1–2 accordingly (`Module 1: How {PRODUCT} Works` — Days 1–3; `Module 2: Why It Works This Way + Competitive Contrast` — Days 4–5) and generate these sessions instead of the "standard" Module 1–2 below:
+
+- **Day 1 — End-to-end mechanism:** "How does the promise work?" The numbered `end_to_end_trace` from input → systems/artifacts → output, plus `residual_human_work` and a `role_decision`. Generic AI concepts only explain a step in the trace.
+- **Day 2 — Components, state, integrations, and handoffs:** the pieces the trace moves through, and where state lives.
+- **Day 3 — Autonomy, permissions, approval controls, and failure boundaries:** what's automated vs. pre-authorized vs. human-gated, and how failures are surfaced/contained.
+- **Day 4 — Why this approach wins:** its cost/latency/quality constraints, and when a *simpler* workflow would be better. (Requires ≥ 1 `tradeoff_evidence` or `independent_validation` source.)
+- **Day 5 — Competitive contrast at the mechanism level:** how rivals achieve (or don't) the same outcome, compared on mechanism, not marketing.
+
+Each of Days 1–5 must carry the lesson contract (`artifact`, `counterfactual`, `autonomy_boundary`, `role_decision`) — **the builder makes these hard-required in `mechanism_first` mode** (a missing field fails the build). Those four fields, plus the Day-1 trace and each `mechanism_map` entry's `failure_mode`, are exactly the six-question gate: *what happened before → what happens now step by step → which handoff changed → what still needs a person → what could fail → what the {ROLE} should measure/approve.*
+
+**`standard`** — use the fixed topic modules exactly as written below (Days 1–5 = AI Technology Stack + Competitive Landscape). The lesson-contract fields are then optional (advisory warnings only).
+
 ---
 
-#### Module 1: AI Technology Stack — Learning Days 1–3
+#### Module 1: AI Technology Stack — Learning Days 1–3  *(standard progression)*
 
 *Tech theme: What AI powers {PRODUCT}, and how does it work?*
 
@@ -1206,7 +1287,7 @@ research (Layers 1–4). Use model knowledge to supplement sparse modules.
 
 ---
 
-#### Module 2: Competitive Landscape — Learning Days 4–5
+#### Module 2: Competitive Landscape — Learning Days 4–5  *(standard progression)*
 
 *Theme: Where does {PRODUCT} sit in the market, and why?*
 
@@ -1428,6 +1509,7 @@ containing all the content you generated in Step 4, in this shape:
   "generated": "{ISO 8601 datetime}", "generated_date": "{YYYY-MM-DD}",
   "start_date": "{YYYY-MM-DD}", "timestamp": "{YYYYMMDD-HHMMSS}",
   "banner": null,                                  // or "limited_sources" | "no_search"
+  "progression": "mechanism_first",                // "mechanism_first" (default w/ a product) | "standard"
   "why_product": "2-3 sentences (inline markdown ok)",
   "tech_stack": [ { "tech": "RAG", "confidence": "Confirmed|[INFERRED]", "role_in_product": "…" } ],
   "competitive": {
@@ -1435,6 +1517,17 @@ containing all the content you generated in Step 4, in this shape:
     "rows": [ { "label": "Core AI strength", "product": "…", "values": ["…", "…"] } ],
     "source": "citation or [Model Knowledge]"
   },
+  "mechanism_map": [                                 // Step 3.75 — 3–5 claims; drives Day 1. Required for mechanism-first mode.
+    { "id": "m1",
+      "learner_question": "…", "product_promise": "…", "observable_behavior": "…",
+      "mechanism": "components, state, integrations, handoffs (engineer-grade depth)",
+      "traditional_counterfactual": "…", "autonomy_boundary": "…", "failure_mode": "…",
+      "high_impact": false,                          // true for money/deploy/safety/accuracy/growth claims
+      "evidence": { "urls": ["https://…"],           // legal/pricing/home/README URLs may live HERE only
+                    "note": "2–4 sentences",
+                    "confidence": "confirmed|inferred|unknown" }   // confirmed ⇒ urls non-empty
+    }
+  ],
   "modules": [
     { "number": 1, "title": "AI Technology Stack", "day_range": [1, 3],
       "focus": "1-2 sentences derived from the first & last session what_learn" }
@@ -1445,9 +1538,19 @@ containing all the content you generated in Step 4, in this shape:
       "title": "The Core AI Engine", "minutes": 20,
       "insight": "session_insight — pick one Day-Summary Frame, all placeholders filled",
       "what_learn": "one sentence",
+      // Day 1 contract (mechanism-first — required): the end-to-end trace + residual human work + a decision
+      "end_to_end_trace": [ "step 1 …", "step 2 …", "… input → systems/artifacts → output" ],
+      "residual_human_work": "what stays human-owned (goal, credentials, budget, high-risk actions)",
+      // Lesson contract for Days 1–5 (Days 2–5 carry these too; recommended):
+      "artifact": "one concrete artifact/interface (task queue, code diff, published URL, approval record)",
+      "counterfactual": "how this was done before the product",
+      "autonomy_boundary": "what is automated vs. still human/pre-authorized",
+      "role_decision": "one decision this ROLE makes (approve / measure / gate / build tradeoff)",
       "key_concepts": [ { "name": "…", "definition": "…" } ],
       "sources": [ { "title": "…", "url": "https://…", "platform": "arXiv",
-                     "minutes": "15", "summary": "…", "category": 1, "vendor": false } ],
+                     "minutes": "15", "summary": "…", "category": 1, "vendor": false,
+                     "role": "mechanism_evidence",          // see Source roles table in Step 3
+                     "supports_claim": "m1", "why_it_matters": "one line", "reading_order": 1 } ],
       "model_knowledge_note": null,                // or a string when sources are sparse
       "body_md": null,                             // optional extra teaching prose/code (markdown)
       "applies": {
@@ -1473,9 +1576,17 @@ containing all the content you generated in Step 4, in this shape:
 ```
 
 Notes: `category` is the taxonomy number (1–9) and `vendor` is `true` for taxonomy category 9 —
-include them so the diversity self-check is auditable. All 15 days (1–13 learning + 14/15 capstone)
-must be present. Inline markdown (`**bold**`, `*italic*`, `` `code` ``, `[label](url)`) is rendered
-safely; put longer prose/code in `body_md`.
+include them so the diversity self-check is auditable. Each source's `role` (Step 3 table) drives the
+claim-type-aware cap and the exclusion gate. All 15 days (1–13 learning + 14/15 capstone) must be
+present. Inline markdown (`**bold**`, `*italic*`, `` `code` ``, `[label](url)`) is rendered safely;
+put longer prose/code in `body_md`.
+
+**The builder enforces P0 before writing anything** (`validate_p0`): it prints a gate line and, on any
+hard violation, prints `[FAIL] …` and exits non-zero without producing files. Hard failures: a
+legal/pricing/home/README URL (or `role: "excluded_type"`) assigned as a learner source; a missing
+Day-1 `end_to_end_trace`/`residual_human_work`/`role_decision`; a `mechanism_map` that isn't 3–5 valid
+entries; a `confirmed` claim with no evidence URL. Fix the reported items and re-run — do not work
+around the gate. (With no `mechanism_map`, the builder runs in legacy mode: gates skipped, one warning.)
 
 **Step B — Locate and run the builder:**
 ```bash

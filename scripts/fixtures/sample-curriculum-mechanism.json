@@ -1,0 +1,1432 @@
+{
+  "product": "Polsia",
+  "product_slug": "polsia",
+  "role": "Product Manager",
+  "role_slug": "product-manager",
+  "generated": "2026-08-24T10:00:00Z",
+  "generated_date": "2026-08-24",
+  "start_date": "2026-08-24",
+  "timestamp": "20260824-100000",
+  "total_days": 15,
+  "why_product": "It is a **great** anchor for learning AI.",
+  "tech_stack": [
+    {
+      "tech": "LLM",
+      "confidence": "Confirmed",
+      "role_in_product": "Generates answers."
+    },
+    {
+      "tech": "RAG",
+      "confidence": "[INFERRED]",
+      "role_in_product": "Retrieves context."
+    }
+  ],
+  "competitive": {
+    "competitors": [
+      "CompA",
+      "CompB"
+    ],
+    "rows": [
+      {
+        "label": "Core AI strength",
+        "product": "Strong",
+        "values": [
+          "Weak",
+          "Med"
+        ]
+      },
+      {
+        "label": "Pricing model",
+        "product": "Free",
+        "values": [
+          "Paid",
+          "Paid"
+        ]
+      }
+    ],
+    "source": "[Model Knowledge]"
+  },
+  "modules": [
+    {
+      "number": 1,
+      "title": "AI Technology Stack",
+      "day_range": [
+        1,
+        3
+      ],
+      "focus": "Learn the core engine. See how retrieval fits in."
+    },
+    {
+      "number": 2,
+      "title": "Competitive Landscape",
+      "day_range": [
+        4,
+        5
+      ],
+      "focus": "Map the market. Spot the real differentiator."
+    },
+    {
+      "number": 3,
+      "title": "Your Role",
+      "day_range": [
+        6,
+        8
+      ],
+      "focus": "Apply your craft. Ship with confidence."
+    },
+    {
+      "number": 4,
+      "title": "How to Build This",
+      "day_range": [
+        9,
+        11
+      ],
+      "focus": "Architecture patterns. Tradeoffs that matter."
+    },
+    {
+      "number": 5,
+      "title": "Day-in-Life + Capstone",
+      "day_range": [
+        12,
+        15
+      ],
+      "focus": "Real workflows. Prove what you learned."
+    }
+  ],
+  "sessions": [
+    {
+      "day": 1,
+      "session_number": 1,
+      "module": 1,
+      "title": "Session 1 Title & <safety> \"test\"",
+      "minutes": 20,
+      "insight": "**Product** achieves *speed* by caching. In this session you'll see how `RAG` works. Link: [spec](https://example.com/spec).",
+      "what_learn": "The core concept for day 1.",
+      "key_concepts": [
+        {
+          "name": "RAG",
+          "definition": "Retrieval augmented generation."
+        },
+        {
+          "name": "Embeddings",
+          "definition": "Vector representations."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Attention Is All You Need",
+          "url": "https://arxiv.org/abs/1706.03762",
+          "platform": "arXiv",
+          "minutes": "15",
+          "summary": "The transformer paper.",
+          "category": 1,
+          "vendor": false,
+          "role": "mechanism_evidence",
+          "supports_claim": "m1",
+          "why_it_matters": "Explains the underlying architecture pattern.",
+          "reading_order": 1
+        },
+        {
+          "title": "MDN: HTTP",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP",
+          "platform": "MDN",
+          "minutes": "10",
+          "summary": "Reference.",
+          "category": 5,
+          "vendor": false,
+          "role": "independent_validation",
+          "supports_claim": "m3",
+          "why_it_matters": "Independent reference, not the vendor's own framing.",
+          "reading_order": 2
+        }
+      ],
+      "model_knowledge_note": null,
+      "body_md": "## Deep dive\nHere is a paragraph with **bold** and a list:\n\n- one\n- two\n\n```python\nprint('hi')\n```\n",
+      "applies": {
+        "before_scenario": "A PM at a startup without Product typically juggles spreadsheets.",
+        "before_steps": [
+          {
+            "text": "Collect data manually",
+            "minutes": "30",
+            "tag": "researched"
+          },
+          {
+            "text": "Reconcile by hand",
+            "minutes": "20",
+            "tag": "model knowledge"
+          }
+        ],
+        "before_total": "~50 min; requires a PM and an analyst",
+        "with_product": "The tool automates ingestion end to end, removing the manual reconciliation step entirely and giving the whole team a single trustworthy view of the data within minutes instead of hours.",
+        "role_takeaway": "You can now measure activation weekly, defend prioritization calls with real evidence, and spot regressions before they reach customers — decisions that used to wait on a manual report you no longer have to run."
+      },
+      "quiz": {
+        "q1": {
+          "stem": "Which is best?",
+          "options": [
+            "A) fast",
+            "B) correct & <safe>",
+            "C) cheap",
+            "D) both"
+          ],
+          "correct": "B",
+          "explanation": "B because *correctness* matters."
+        },
+        "q2": {
+          "stem": "When to use RAG?",
+          "options": [
+            "A) never",
+            "B) always",
+            "C) when data changes",
+            "D) random"
+          ],
+          "correct": "C",
+          "explanation": "C is right."
+        },
+        "q3": {
+          "prompt": "Explain the tradeoff to a stakeholder.",
+          "model_answer": "RAG for fresh data; fine-tune for stable tasks."
+        }
+      },
+      "artifact": "A provider URL plus a Git repository of generated code and tests.",
+      "counterfactual": "Spec → build → deploy across a PM, an engineer, and DevOps.",
+      "autonomy_boundary": "Subdomain deploys auto-run; custom domains stay human-gated.",
+      "role_decision": "Decide which task types you pre-authorize vs. gate for approval.",
+      "end_to_end_trace": [
+        "You give Polsia a company brief and constraints.",
+        "The planner turns the goal into a suggested task backlog.",
+        "An approval/autonomy gate promotes a task.",
+        "A specialist agent works in a sandbox and produces code + tests.",
+        "A repository is created or updated.",
+        "Database and hosting are provisioned via authorized APIs.",
+        "Deployment creates a provider URL.",
+        "Tests, logs, and outcomes feed the next planning cycle."
+      ],
+      "residual_human_work": "The original goal, credentials, budget, custom-domain ownership, and any high-risk action remain human-controlled."
+    },
+    {
+      "day": 2,
+      "session_number": 2,
+      "module": 1,
+      "title": "Session 2 Title & <safety> \"test\"",
+      "minutes": 20,
+      "insight": "**Product** achieves *speed* by caching. In this session you'll see how `RAG` works. Link: [spec](https://example.com/spec).",
+      "what_learn": "The core concept for day 2.",
+      "key_concepts": [
+        {
+          "name": "RAG",
+          "definition": "Retrieval augmented generation."
+        },
+        {
+          "name": "Embeddings",
+          "definition": "Vector representations."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Attention Is All You Need",
+          "url": "https://arxiv.org/abs/1706.03762",
+          "platform": "arXiv",
+          "minutes": "15",
+          "summary": "The transformer paper.",
+          "category": 1,
+          "vendor": false,
+          "role": "mechanism_evidence",
+          "supports_claim": "m1",
+          "why_it_matters": "Explains the underlying architecture pattern.",
+          "reading_order": 1
+        },
+        {
+          "title": "MDN: HTTP",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP",
+          "platform": "MDN",
+          "minutes": "10",
+          "summary": "Reference.",
+          "category": 5,
+          "vendor": false,
+          "role": "independent_validation",
+          "supports_claim": "m3",
+          "why_it_matters": "Independent reference, not the vendor's own framing.",
+          "reading_order": 2
+        }
+      ],
+      "model_knowledge_note": null,
+      "body_md": "## Deep dive\nHere is a paragraph with **bold** and a list:\n\n- one\n- two\n\n```python\nprint('hi')\n```\n",
+      "applies": {
+        "before_scenario": "A PM at a startup without Product typically juggles spreadsheets.",
+        "before_steps": [
+          {
+            "text": "Collect data manually",
+            "minutes": "30",
+            "tag": "researched"
+          },
+          {
+            "text": "Reconcile by hand",
+            "minutes": "20",
+            "tag": "model knowledge"
+          }
+        ],
+        "before_total": "~50 min; requires a PM and an analyst",
+        "with_product": "The tool automates ingestion end to end, removing the manual reconciliation step entirely and giving the whole team a single trustworthy view of the data within minutes instead of hours.",
+        "role_takeaway": "You can now measure activation weekly, defend prioritization calls with real evidence, and spot regressions before they reach customers — decisions that used to wait on a manual report you no longer have to run."
+      },
+      "quiz": {
+        "q1": {
+          "stem": "Which is best?",
+          "options": [
+            "A) fast",
+            "B) correct & <safe>",
+            "C) cheap",
+            "D) both"
+          ],
+          "correct": "B",
+          "explanation": "B because *correctness* matters."
+        },
+        "q2": {
+          "stem": "When to use RAG?",
+          "options": [
+            "A) never",
+            "B) always",
+            "C) when data changes",
+            "D) random"
+          ],
+          "correct": "C",
+          "explanation": "C is right."
+        },
+        "q3": {
+          "prompt": "Explain the tradeoff to a stakeholder.",
+          "model_answer": "RAG for fresh data; fine-tune for stable tasks."
+        }
+      },
+      "artifact": "The task backlog the planner produces from a goal.",
+      "counterfactual": "A PM hand-writes tickets and assigns owners.",
+      "autonomy_boundary": "The planner drafts tasks; promotion past the gate is controlled.",
+      "role_decision": "Choose the promotion criteria for the autonomy gate."
+    },
+    {
+      "day": 3,
+      "session_number": 3,
+      "module": 1,
+      "title": "Session 3 Title & <safety> \"test\"",
+      "minutes": 20,
+      "insight": "**Product** achieves *speed* by caching. In this session you'll see how `RAG` works. Link: [spec](https://example.com/spec).",
+      "what_learn": "The core concept for day 3.",
+      "key_concepts": [
+        {
+          "name": "RAG",
+          "definition": "Retrieval augmented generation."
+        },
+        {
+          "name": "Embeddings",
+          "definition": "Vector representations."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Attention Is All You Need",
+          "url": "https://arxiv.org/abs/1706.03762",
+          "platform": "arXiv",
+          "minutes": "15",
+          "summary": "The transformer paper.",
+          "category": 1,
+          "vendor": false,
+          "role": "mechanism_evidence",
+          "supports_claim": "m1",
+          "why_it_matters": "Explains the underlying architecture pattern.",
+          "reading_order": 1
+        },
+        {
+          "title": "MDN: HTTP",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP",
+          "platform": "MDN",
+          "minutes": "10",
+          "summary": "Reference.",
+          "category": 5,
+          "vendor": false,
+          "role": "independent_validation",
+          "supports_claim": "m3",
+          "why_it_matters": "Independent reference, not the vendor's own framing.",
+          "reading_order": 2
+        }
+      ],
+      "model_knowledge_note": "Some supplemental context.",
+      "body_md": "## Deep dive\nHere is a paragraph with **bold** and a list:\n\n- one\n- two\n\n```python\nprint('hi')\n```\n",
+      "applies": {
+        "before_scenario": "A PM at a startup without Product typically juggles spreadsheets.",
+        "before_steps": [
+          {
+            "text": "Collect data manually",
+            "minutes": "30",
+            "tag": "researched"
+          },
+          {
+            "text": "Reconcile by hand",
+            "minutes": "20",
+            "tag": "model knowledge"
+          }
+        ],
+        "before_total": "~50 min; requires a PM and an analyst",
+        "with_product": "The tool automates ingestion end to end, removing the manual reconciliation step entirely and giving the whole team a single trustworthy view of the data within minutes instead of hours.",
+        "role_takeaway": "You can now measure activation weekly, defend prioritization calls with real evidence, and spot regressions before they reach customers — decisions that used to wait on a manual report you no longer have to run."
+      },
+      "quiz": {
+        "q1": {
+          "stem": "Which is best?",
+          "options": [
+            "A) fast",
+            "B) correct & <safe>",
+            "C) cheap",
+            "D) both"
+          ],
+          "correct": "B",
+          "explanation": "B because *correctness* matters."
+        },
+        "q2": {
+          "stem": "When to use RAG?",
+          "options": [
+            "A) never",
+            "B) always",
+            "C) when data changes",
+            "D) random"
+          ],
+          "correct": "C",
+          "explanation": "C is right."
+        },
+        "q3": {
+          "prompt": "Explain the tradeoff to a stakeholder.",
+          "model_answer": "RAG for fresh data; fine-tune for stable tasks."
+        }
+      },
+      "artifact": "An approval record on a gated task.",
+      "counterfactual": "A lead manually reviews and green-lights risky changes.",
+      "autonomy_boundary": "Low-risk tasks auto-promote; high-risk ones require sign-off.",
+      "role_decision": "Define which actions always require a human approver."
+    },
+    {
+      "day": 4,
+      "session_number": 4,
+      "module": 2,
+      "title": "Session 4 Title & <safety> \"test\"",
+      "minutes": 20,
+      "insight": "**Product** achieves *speed* by caching. In this session you'll see how `RAG` works. Link: [spec](https://example.com/spec).",
+      "what_learn": "The core concept for day 4.",
+      "key_concepts": [
+        {
+          "name": "RAG",
+          "definition": "Retrieval augmented generation."
+        },
+        {
+          "name": "Embeddings",
+          "definition": "Vector representations."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Attention Is All You Need",
+          "url": "https://arxiv.org/abs/1706.03762",
+          "platform": "arXiv",
+          "minutes": "15",
+          "summary": "The transformer paper.",
+          "category": 1,
+          "vendor": false,
+          "role": "mechanism_evidence",
+          "supports_claim": "m1",
+          "why_it_matters": "Explains the underlying architecture pattern.",
+          "reading_order": 1
+        },
+        {
+          "title": "MDN: HTTP",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP",
+          "platform": "MDN",
+          "minutes": "10",
+          "summary": "Reference.",
+          "category": 5,
+          "vendor": false,
+          "role": "independent_validation",
+          "supports_claim": "m3",
+          "why_it_matters": "Independent reference, not the vendor's own framing.",
+          "reading_order": 2
+        }
+      ],
+      "model_knowledge_note": null,
+      "body_md": "## Deep dive\nHere is a paragraph with **bold** and a list:\n\n- one\n- two\n\n```python\nprint('hi')\n```\n",
+      "applies": {
+        "before_scenario": "A PM at a startup without Product typically juggles spreadsheets.",
+        "before_steps": [
+          {
+            "text": "Collect data manually",
+            "minutes": "30",
+            "tag": "researched"
+          },
+          {
+            "text": "Reconcile by hand",
+            "minutes": "20",
+            "tag": "model knowledge"
+          }
+        ],
+        "before_total": "~50 min; requires a PM and an analyst",
+        "with_product": "The tool automates ingestion end to end, removing the manual reconciliation step entirely and giving the whole team a single trustworthy view of the data within minutes instead of hours.",
+        "role_takeaway": "You can now measure activation weekly, defend prioritization calls with real evidence, and spot regressions before they reach customers — decisions that used to wait on a manual report you no longer have to run."
+      },
+      "quiz": {
+        "q1": {
+          "stem": "Which is best?",
+          "options": [
+            "A) fast",
+            "B) correct & <safe>",
+            "C) cheap",
+            "D) both"
+          ],
+          "correct": "B",
+          "explanation": "B because *correctness* matters."
+        },
+        "q2": {
+          "stem": "When to use RAG?",
+          "options": [
+            "A) never",
+            "B) always",
+            "C) when data changes",
+            "D) random"
+          ],
+          "correct": "C",
+          "explanation": "C is right."
+        },
+        "q3": {
+          "prompt": "Explain the tradeoff to a stakeholder.",
+          "model_answer": "RAG for fresh data; fine-tune for stable tasks."
+        }
+      },
+      "artifact": "A deployment log with latency/cost figures.",
+      "counterfactual": "DevOps provisions infra and tunes it by hand.",
+      "autonomy_boundary": "Provisioning is automated within budget scopes you set.",
+      "role_decision": "Set the cost/latency budget the automation must respect."
+    },
+    {
+      "day": 5,
+      "session_number": 5,
+      "module": 2,
+      "title": "Session 5 Title & <safety> \"test\"",
+      "minutes": 20,
+      "insight": "**Product** achieves *speed* by caching. In this session you'll see how `RAG` works. Link: [spec](https://example.com/spec).",
+      "what_learn": "The core concept for day 5.",
+      "key_concepts": [
+        {
+          "name": "RAG",
+          "definition": "Retrieval augmented generation."
+        },
+        {
+          "name": "Embeddings",
+          "definition": "Vector representations."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Attention Is All You Need",
+          "url": "https://arxiv.org/abs/1706.03762",
+          "platform": "arXiv",
+          "minutes": "15",
+          "summary": "The transformer paper.",
+          "category": 1,
+          "vendor": false,
+          "role": "mechanism_evidence",
+          "supports_claim": "m1",
+          "why_it_matters": "Explains the underlying architecture pattern.",
+          "reading_order": 1
+        },
+        {
+          "title": "MDN: HTTP",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP",
+          "platform": "MDN",
+          "minutes": "10",
+          "summary": "Reference.",
+          "category": 5,
+          "vendor": false,
+          "role": "independent_validation",
+          "supports_claim": "m3",
+          "why_it_matters": "Independent reference, not the vendor's own framing.",
+          "reading_order": 2
+        }
+      ],
+      "model_knowledge_note": null,
+      "body_md": "## Deep dive\nHere is a paragraph with **bold** and a list:\n\n- one\n- two\n\n```python\nprint('hi')\n```\n",
+      "applies": {
+        "before_scenario": "A PM at a startup without Product typically juggles spreadsheets.",
+        "before_steps": [
+          {
+            "text": "Collect data manually",
+            "minutes": "30",
+            "tag": "researched"
+          },
+          {
+            "text": "Reconcile by hand",
+            "minutes": "20",
+            "tag": "model knowledge"
+          }
+        ],
+        "before_total": "~50 min; requires a PM and an analyst",
+        "with_product": "The tool automates ingestion end to end, removing the manual reconciliation step entirely and giving the whole team a single trustworthy view of the data within minutes instead of hours.",
+        "role_takeaway": "You can now measure activation weekly, defend prioritization calls with real evidence, and spot regressions before they reach customers — decisions that used to wait on a manual report you no longer have to run."
+      },
+      "quiz": {
+        "q1": {
+          "stem": "Which is best?",
+          "options": [
+            "A) fast",
+            "B) correct & <safe>",
+            "C) cheap",
+            "D) both"
+          ],
+          "correct": "B",
+          "explanation": "B because *correctness* matters."
+        },
+        "q2": {
+          "stem": "When to use RAG?",
+          "options": [
+            "A) never",
+            "B) always",
+            "C) when data changes",
+            "D) random"
+          ],
+          "correct": "C",
+          "explanation": "C is right."
+        },
+        "q3": {
+          "prompt": "Explain the tradeoff to a stakeholder.",
+          "model_answer": "RAG for fresh data; fine-tune for stable tasks."
+        }
+      },
+      "artifact": "A side-by-side of two agentic products on the same task.",
+      "counterfactual": "Analysts compile a manual competitive teardown.",
+      "autonomy_boundary": "Comparison is drawn from observable behavior, not private stacks.",
+      "role_decision": "Pick the mechanism-level axis that actually differentiates them."
+    },
+    {
+      "day": 6,
+      "session_number": 6,
+      "module": 3,
+      "title": "Session 6 Title & <safety> \"test\"",
+      "minutes": 20,
+      "insight": "**Product** achieves *speed* by caching. In this session you'll see how `RAG` works. Link: [spec](https://example.com/spec).",
+      "what_learn": "The core concept for day 6.",
+      "key_concepts": [
+        {
+          "name": "RAG",
+          "definition": "Retrieval augmented generation."
+        },
+        {
+          "name": "Embeddings",
+          "definition": "Vector representations."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Attention Is All You Need",
+          "url": "https://arxiv.org/abs/1706.03762",
+          "platform": "arXiv",
+          "minutes": "15",
+          "summary": "The transformer paper.",
+          "category": 1,
+          "vendor": false
+        },
+        {
+          "title": "MDN: HTTP",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP",
+          "platform": "MDN",
+          "minutes": "10",
+          "summary": "Reference.",
+          "category": 5,
+          "vendor": false
+        }
+      ],
+      "model_knowledge_note": null,
+      "body_md": "## Deep dive\nHere is a paragraph with **bold** and a list:\n\n- one\n- two\n\n```python\nprint('hi')\n```\n",
+      "applies": {
+        "before_scenario": "A PM at a startup without Product typically juggles spreadsheets.",
+        "before_steps": [
+          {
+            "text": "Collect data manually",
+            "minutes": "30",
+            "tag": "researched"
+          },
+          {
+            "text": "Reconcile by hand",
+            "minutes": "20",
+            "tag": "model knowledge"
+          }
+        ],
+        "before_total": "~50 min; requires a PM and an analyst",
+        "with_product": "The tool automates ingestion end to end, removing the manual reconciliation step entirely and giving the whole team a single trustworthy view of the data within minutes instead of hours.",
+        "role_takeaway": "You can now measure activation weekly, defend prioritization calls with real evidence, and spot regressions before they reach customers — decisions that used to wait on a manual report you no longer have to run."
+      },
+      "quiz": {
+        "q1": {
+          "stem": "Which is best?",
+          "options": [
+            "A) fast",
+            "B) correct & <safe>",
+            "C) cheap",
+            "D) both"
+          ],
+          "correct": "B",
+          "explanation": "B because *correctness* matters."
+        },
+        "q2": {
+          "stem": "When to use RAG?",
+          "options": [
+            "A) never",
+            "B) always",
+            "C) when data changes",
+            "D) random"
+          ],
+          "correct": "C",
+          "explanation": "C is right."
+        },
+        "q3": {
+          "prompt": "Explain the tradeoff to a stakeholder.",
+          "model_answer": "RAG for fresh data; fine-tune for stable tasks."
+        }
+      }
+    },
+    {
+      "day": 7,
+      "session_number": 7,
+      "module": 3,
+      "title": "Session 7 Title & <safety> \"test\"",
+      "minutes": 20,
+      "insight": "**Product** achieves *speed* by caching. In this session you'll see how `RAG` works. Link: [spec](https://example.com/spec).",
+      "what_learn": "The core concept for day 7.",
+      "key_concepts": [
+        {
+          "name": "RAG",
+          "definition": "Retrieval augmented generation."
+        },
+        {
+          "name": "Embeddings",
+          "definition": "Vector representations."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Attention Is All You Need",
+          "url": "https://arxiv.org/abs/1706.03762",
+          "platform": "arXiv",
+          "minutes": "15",
+          "summary": "The transformer paper.",
+          "category": 1,
+          "vendor": false
+        },
+        {
+          "title": "MDN: HTTP",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP",
+          "platform": "MDN",
+          "minutes": "10",
+          "summary": "Reference.",
+          "category": 5,
+          "vendor": false
+        }
+      ],
+      "model_knowledge_note": null,
+      "body_md": "## Deep dive\nHere is a paragraph with **bold** and a list:\n\n- one\n- two\n\n```python\nprint('hi')\n```\n",
+      "applies": {
+        "before_scenario": "A PM at a startup without Product typically juggles spreadsheets.",
+        "before_steps": [
+          {
+            "text": "Collect data manually",
+            "minutes": "30",
+            "tag": "researched"
+          },
+          {
+            "text": "Reconcile by hand",
+            "minutes": "20",
+            "tag": "model knowledge"
+          }
+        ],
+        "before_total": "~50 min; requires a PM and an analyst",
+        "with_product": "The tool automates ingestion end to end, removing the manual reconciliation step entirely and giving the whole team a single trustworthy view of the data within minutes instead of hours.",
+        "role_takeaway": "You can now measure activation weekly, defend prioritization calls with real evidence, and spot regressions before they reach customers — decisions that used to wait on a manual report you no longer have to run."
+      },
+      "quiz": {
+        "q1": {
+          "stem": "Which is best?",
+          "options": [
+            "A) fast",
+            "B) correct & <safe>",
+            "C) cheap",
+            "D) both"
+          ],
+          "correct": "B",
+          "explanation": "B because *correctness* matters."
+        },
+        "q2": {
+          "stem": "When to use RAG?",
+          "options": [
+            "A) never",
+            "B) always",
+            "C) when data changes",
+            "D) random"
+          ],
+          "correct": "C",
+          "explanation": "C is right."
+        },
+        "q3": {
+          "prompt": "Explain the tradeoff to a stakeholder.",
+          "model_answer": "RAG for fresh data; fine-tune for stable tasks."
+        }
+      }
+    },
+    {
+      "day": 8,
+      "session_number": 8,
+      "module": 3,
+      "title": "Session 8 Title & <safety> \"test\"",
+      "minutes": 20,
+      "insight": "**Product** achieves *speed* by caching. In this session you'll see how `RAG` works. Link: [spec](https://example.com/spec).",
+      "what_learn": "The core concept for day 8.",
+      "key_concepts": [
+        {
+          "name": "RAG",
+          "definition": "Retrieval augmented generation."
+        },
+        {
+          "name": "Embeddings",
+          "definition": "Vector representations."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Attention Is All You Need",
+          "url": "https://arxiv.org/abs/1706.03762",
+          "platform": "arXiv",
+          "minutes": "15",
+          "summary": "The transformer paper.",
+          "category": 1,
+          "vendor": false
+        },
+        {
+          "title": "MDN: HTTP",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP",
+          "platform": "MDN",
+          "minutes": "10",
+          "summary": "Reference.",
+          "category": 5,
+          "vendor": false
+        }
+      ],
+      "model_knowledge_note": null,
+      "body_md": "## Deep dive\nHere is a paragraph with **bold** and a list:\n\n- one\n- two\n\n```python\nprint('hi')\n```\n",
+      "applies": {
+        "before_scenario": "A PM at a startup without Product typically juggles spreadsheets.",
+        "before_steps": [
+          {
+            "text": "Collect data manually",
+            "minutes": "30",
+            "tag": "researched"
+          },
+          {
+            "text": "Reconcile by hand",
+            "minutes": "20",
+            "tag": "model knowledge"
+          }
+        ],
+        "before_total": "~50 min; requires a PM and an analyst",
+        "with_product": "The tool automates ingestion end to end, removing the manual reconciliation step entirely and giving the whole team a single trustworthy view of the data within minutes instead of hours.",
+        "role_takeaway": "You can now measure activation weekly, defend prioritization calls with real evidence, and spot regressions before they reach customers — decisions that used to wait on a manual report you no longer have to run."
+      },
+      "quiz": {
+        "q1": {
+          "stem": "Which is best?",
+          "options": [
+            "A) fast",
+            "B) correct & <safe>",
+            "C) cheap",
+            "D) both"
+          ],
+          "correct": "B",
+          "explanation": "B because *correctness* matters."
+        },
+        "q2": {
+          "stem": "When to use RAG?",
+          "options": [
+            "A) never",
+            "B) always",
+            "C) when data changes",
+            "D) random"
+          ],
+          "correct": "C",
+          "explanation": "C is right."
+        },
+        "q3": {
+          "prompt": "Explain the tradeoff to a stakeholder.",
+          "model_answer": "RAG for fresh data; fine-tune for stable tasks."
+        }
+      }
+    },
+    {
+      "day": 9,
+      "session_number": 9,
+      "module": 4,
+      "title": "Session 9 Title & <safety> \"test\"",
+      "minutes": 20,
+      "insight": "**Product** achieves *speed* by caching. In this session you'll see how `RAG` works. Link: [spec](https://example.com/spec).",
+      "what_learn": "The core concept for day 9.",
+      "key_concepts": [
+        {
+          "name": "RAG",
+          "definition": "Retrieval augmented generation."
+        },
+        {
+          "name": "Embeddings",
+          "definition": "Vector representations."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Attention Is All You Need",
+          "url": "https://arxiv.org/abs/1706.03762",
+          "platform": "arXiv",
+          "minutes": "15",
+          "summary": "The transformer paper.",
+          "category": 1,
+          "vendor": false
+        },
+        {
+          "title": "MDN: HTTP",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP",
+          "platform": "MDN",
+          "minutes": "10",
+          "summary": "Reference.",
+          "category": 5,
+          "vendor": false
+        }
+      ],
+      "model_knowledge_note": null,
+      "body_md": "## Deep dive\nHere is a paragraph with **bold** and a list:\n\n- one\n- two\n\n```python\nprint('hi')\n```\n",
+      "applies": {
+        "before_scenario": "A PM at a startup without Product typically juggles spreadsheets.",
+        "before_steps": [
+          {
+            "text": "Collect data manually",
+            "minutes": "30",
+            "tag": "researched"
+          },
+          {
+            "text": "Reconcile by hand",
+            "minutes": "20",
+            "tag": "model knowledge"
+          }
+        ],
+        "before_total": "~50 min; requires a PM and an analyst",
+        "with_product": "The tool automates ingestion end to end, removing the manual reconciliation step entirely and giving the whole team a single trustworthy view of the data within minutes instead of hours.",
+        "role_takeaway": "You can now measure activation weekly, defend prioritization calls with real evidence, and spot regressions before they reach customers — decisions that used to wait on a manual report you no longer have to run."
+      },
+      "quiz": {
+        "q1": {
+          "stem": "Which is best?",
+          "options": [
+            "A) fast",
+            "B) correct & <safe>",
+            "C) cheap",
+            "D) both"
+          ],
+          "correct": "B",
+          "explanation": "B because *correctness* matters."
+        },
+        "q2": {
+          "stem": "When to use RAG?",
+          "options": [
+            "A) never",
+            "B) always",
+            "C) when data changes",
+            "D) random"
+          ],
+          "correct": "C",
+          "explanation": "C is right."
+        },
+        "q3": {
+          "prompt": "Explain the tradeoff to a stakeholder.",
+          "model_answer": "RAG for fresh data; fine-tune for stable tasks."
+        }
+      }
+    },
+    {
+      "day": 10,
+      "session_number": 10,
+      "module": 4,
+      "title": "Session 10 Title & <safety> \"test\"",
+      "minutes": 20,
+      "insight": "**Product** achieves *speed* by caching. In this session you'll see how `RAG` works. Link: [spec](https://example.com/spec).",
+      "what_learn": "The core concept for day 10.",
+      "key_concepts": [
+        {
+          "name": "RAG",
+          "definition": "Retrieval augmented generation."
+        },
+        {
+          "name": "Embeddings",
+          "definition": "Vector representations."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Attention Is All You Need",
+          "url": "https://arxiv.org/abs/1706.03762",
+          "platform": "arXiv",
+          "minutes": "15",
+          "summary": "The transformer paper.",
+          "category": 1,
+          "vendor": false
+        },
+        {
+          "title": "MDN: HTTP",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP",
+          "platform": "MDN",
+          "minutes": "10",
+          "summary": "Reference.",
+          "category": 5,
+          "vendor": false
+        }
+      ],
+      "model_knowledge_note": null,
+      "body_md": "## Deep dive\nHere is a paragraph with **bold** and a list:\n\n- one\n- two\n\n```python\nprint('hi')\n```\n",
+      "applies": {
+        "before_scenario": "A PM at a startup without Product typically juggles spreadsheets.",
+        "before_steps": [
+          {
+            "text": "Collect data manually",
+            "minutes": "30",
+            "tag": "researched"
+          },
+          {
+            "text": "Reconcile by hand",
+            "minutes": "20",
+            "tag": "model knowledge"
+          }
+        ],
+        "before_total": "~50 min; requires a PM and an analyst",
+        "with_product": "The tool automates ingestion end to end, removing the manual reconciliation step entirely and giving the whole team a single trustworthy view of the data within minutes instead of hours.",
+        "role_takeaway": "You can now measure activation weekly, defend prioritization calls with real evidence, and spot regressions before they reach customers — decisions that used to wait on a manual report you no longer have to run."
+      },
+      "quiz": {
+        "q1": {
+          "stem": "Which is best?",
+          "options": [
+            "A) fast",
+            "B) correct & <safe>",
+            "C) cheap",
+            "D) both"
+          ],
+          "correct": "B",
+          "explanation": "B because *correctness* matters."
+        },
+        "q2": {
+          "stem": "When to use RAG?",
+          "options": [
+            "A) never",
+            "B) always",
+            "C) when data changes",
+            "D) random"
+          ],
+          "correct": "C",
+          "explanation": "C is right."
+        },
+        "q3": {
+          "prompt": "Explain the tradeoff to a stakeholder.",
+          "model_answer": "RAG for fresh data; fine-tune for stable tasks."
+        }
+      }
+    },
+    {
+      "day": 11,
+      "session_number": 11,
+      "module": 4,
+      "title": "Session 11 Title & <safety> \"test\"",
+      "minutes": 20,
+      "insight": "**Product** achieves *speed* by caching. In this session you'll see how `RAG` works. Link: [spec](https://example.com/spec).",
+      "what_learn": "The core concept for day 11.",
+      "key_concepts": [
+        {
+          "name": "RAG",
+          "definition": "Retrieval augmented generation."
+        },
+        {
+          "name": "Embeddings",
+          "definition": "Vector representations."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Attention Is All You Need",
+          "url": "https://arxiv.org/abs/1706.03762",
+          "platform": "arXiv",
+          "minutes": "15",
+          "summary": "The transformer paper.",
+          "category": 1,
+          "vendor": false
+        },
+        {
+          "title": "MDN: HTTP",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP",
+          "platform": "MDN",
+          "minutes": "10",
+          "summary": "Reference.",
+          "category": 5,
+          "vendor": false
+        }
+      ],
+      "model_knowledge_note": null,
+      "body_md": "## Deep dive\nHere is a paragraph with **bold** and a list:\n\n- one\n- two\n\n```python\nprint('hi')\n```\n",
+      "applies": {
+        "before_scenario": "A PM at a startup without Product typically juggles spreadsheets.",
+        "before_steps": [
+          {
+            "text": "Collect data manually",
+            "minutes": "30",
+            "tag": "researched"
+          },
+          {
+            "text": "Reconcile by hand",
+            "minutes": "20",
+            "tag": "model knowledge"
+          }
+        ],
+        "before_total": "~50 min; requires a PM and an analyst",
+        "with_product": "The tool automates ingestion end to end, removing the manual reconciliation step entirely and giving the whole team a single trustworthy view of the data within minutes instead of hours.",
+        "role_takeaway": "You can now measure activation weekly, defend prioritization calls with real evidence, and spot regressions before they reach customers — decisions that used to wait on a manual report you no longer have to run."
+      },
+      "quiz": {
+        "q1": {
+          "stem": "Which is best?",
+          "options": [
+            "A) fast",
+            "B) correct & <safe>",
+            "C) cheap",
+            "D) both"
+          ],
+          "correct": "B",
+          "explanation": "B because *correctness* matters."
+        },
+        "q2": {
+          "stem": "When to use RAG?",
+          "options": [
+            "A) never",
+            "B) always",
+            "C) when data changes",
+            "D) random"
+          ],
+          "correct": "C",
+          "explanation": "C is right."
+        },
+        "q3": {
+          "prompt": "Explain the tradeoff to a stakeholder.",
+          "model_answer": "RAG for fresh data; fine-tune for stable tasks."
+        }
+      }
+    },
+    {
+      "day": 12,
+      "session_number": 12,
+      "module": 5,
+      "title": "Session 12 Title & <safety> \"test\"",
+      "minutes": 20,
+      "insight": "**Product** achieves *speed* by caching. In this session you'll see how `RAG` works. Link: [spec](https://example.com/spec).",
+      "what_learn": "The core concept for day 12.",
+      "key_concepts": [
+        {
+          "name": "RAG",
+          "definition": "Retrieval augmented generation."
+        },
+        {
+          "name": "Embeddings",
+          "definition": "Vector representations."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Attention Is All You Need",
+          "url": "https://arxiv.org/abs/1706.03762",
+          "platform": "arXiv",
+          "minutes": "15",
+          "summary": "The transformer paper.",
+          "category": 1,
+          "vendor": false
+        },
+        {
+          "title": "MDN: HTTP",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP",
+          "platform": "MDN",
+          "minutes": "10",
+          "summary": "Reference.",
+          "category": 5,
+          "vendor": false
+        }
+      ],
+      "model_knowledge_note": null,
+      "body_md": "## Deep dive\nHere is a paragraph with **bold** and a list:\n\n- one\n- two\n\n```python\nprint('hi')\n```\n",
+      "applies": {
+        "before_scenario": "A PM at a startup without Product typically juggles spreadsheets.",
+        "before_steps": [
+          {
+            "text": "Collect data manually",
+            "minutes": "30",
+            "tag": "researched"
+          },
+          {
+            "text": "Reconcile by hand",
+            "minutes": "20",
+            "tag": "model knowledge"
+          }
+        ],
+        "before_total": "~50 min; requires a PM and an analyst",
+        "with_product": "The tool automates ingestion end to end, removing the manual reconciliation step entirely and giving the whole team a single trustworthy view of the data within minutes instead of hours.",
+        "role_takeaway": "You can now measure activation weekly, defend prioritization calls with real evidence, and spot regressions before they reach customers — decisions that used to wait on a manual report you no longer have to run."
+      },
+      "quiz": {
+        "q1": {
+          "stem": "Which is best?",
+          "options": [
+            "A) fast",
+            "B) correct & <safe>",
+            "C) cheap",
+            "D) both"
+          ],
+          "correct": "B",
+          "explanation": "B because *correctness* matters."
+        },
+        "q2": {
+          "stem": "When to use RAG?",
+          "options": [
+            "A) never",
+            "B) always",
+            "C) when data changes",
+            "D) random"
+          ],
+          "correct": "C",
+          "explanation": "C is right."
+        },
+        "q3": {
+          "prompt": "Explain the tradeoff to a stakeholder.",
+          "model_answer": "RAG for fresh data; fine-tune for stable tasks."
+        }
+      }
+    },
+    {
+      "day": 13,
+      "session_number": 13,
+      "module": 5,
+      "title": "Session 13 Title & <safety> \"test\"",
+      "minutes": 20,
+      "insight": "**Product** achieves *speed* by caching. In this session you'll see how `RAG` works. Link: [spec](https://example.com/spec).",
+      "what_learn": "The core concept for day 13.",
+      "key_concepts": [
+        {
+          "name": "RAG",
+          "definition": "Retrieval augmented generation."
+        },
+        {
+          "name": "Embeddings",
+          "definition": "Vector representations."
+        }
+      ],
+      "sources": [
+        {
+          "title": "Attention Is All You Need",
+          "url": "https://arxiv.org/abs/1706.03762",
+          "platform": "arXiv",
+          "minutes": "15",
+          "summary": "The transformer paper.",
+          "category": 1,
+          "vendor": false
+        },
+        {
+          "title": "MDN: HTTP",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP",
+          "platform": "MDN",
+          "minutes": "10",
+          "summary": "Reference.",
+          "category": 5,
+          "vendor": false
+        }
+      ],
+      "model_knowledge_note": null,
+      "body_md": "## Deep dive\nHere is a paragraph with **bold** and a list:\n\n- one\n- two\n\n```python\nprint('hi')\n```\n",
+      "applies": {
+        "before_scenario": "A PM at a startup without Product typically juggles spreadsheets.",
+        "before_steps": [
+          {
+            "text": "Collect data manually",
+            "minutes": "30",
+            "tag": "researched"
+          },
+          {
+            "text": "Reconcile by hand",
+            "minutes": "20",
+            "tag": "model knowledge"
+          }
+        ],
+        "before_total": "~50 min; requires a PM and an analyst",
+        "with_product": "The tool automates ingestion end to end, removing the manual reconciliation step entirely and giving the whole team a single trustworthy view of the data within minutes instead of hours.",
+        "role_takeaway": "You can now measure activation weekly, defend prioritization calls with real evidence, and spot regressions before they reach customers — decisions that used to wait on a manual report you no longer have to run."
+      },
+      "quiz": {
+        "q1": {
+          "stem": "Which is best?",
+          "options": [
+            "A) fast",
+            "B) correct & <safe>",
+            "C) cheap",
+            "D) both"
+          ],
+          "correct": "B",
+          "explanation": "B because *correctness* matters."
+        },
+        "q2": {
+          "stem": "When to use RAG?",
+          "options": [
+            "A) never",
+            "B) always",
+            "C) when data changes",
+            "D) random"
+          ],
+          "correct": "C",
+          "explanation": "C is right."
+        },
+        "q3": {
+          "prompt": "Explain the tradeoff to a stakeholder.",
+          "model_answer": "RAG for fresh data; fine-tune for stable tasks."
+        }
+      }
+    },
+    {
+      "day": 14,
+      "capstone": "mc",
+      "title": "Capstone Quiz — Multiple Choice",
+      "minutes": 20,
+      "questions": [
+        {
+          "stem": "MC 1 module 1",
+          "options": [
+            "A) a",
+            "B) b",
+            "C) c",
+            "D) d"
+          ],
+          "correct": "A",
+          "explanation": "Because 1."
+        },
+        {
+          "stem": "MC 2 module 2",
+          "options": [
+            "A) a",
+            "B) b",
+            "C) c",
+            "D) d"
+          ],
+          "correct": "A",
+          "explanation": "Because 2."
+        },
+        {
+          "stem": "MC 3 module 3",
+          "options": [
+            "A) a",
+            "B) b",
+            "C) c",
+            "D) d"
+          ],
+          "correct": "A",
+          "explanation": "Because 3."
+        },
+        {
+          "stem": "MC 4 module 4",
+          "options": [
+            "A) a",
+            "B) b",
+            "C) c",
+            "D) d"
+          ],
+          "correct": "A",
+          "explanation": "Because 4."
+        },
+        {
+          "stem": "MC 5 module 5",
+          "options": [
+            "A) a",
+            "B) b",
+            "C) c",
+            "D) d"
+          ],
+          "correct": "A",
+          "explanation": "Because 5."
+        }
+      ],
+      "what_learn": "Prove what you learned across all five modules."
+    },
+    {
+      "day": 15,
+      "capstone": "oe",
+      "title": "Capstone: Open-Ended Questions",
+      "minutes": 15,
+      "questions": [
+        {
+          "prompt": "Synthesis Q1?",
+          "model_answer": "A strong synthesis answer."
+        },
+        {
+          "prompt": "Synthesis Q2?",
+          "model_answer": "Another strong answer."
+        }
+      ]
+    }
+  ],
+  "mechanism_map": [
+    {
+      "id": "m1",
+      "learner_question": "How does a request become a deployed website with no human team?",
+      "product_promise": "Turns a plain-language goal into a live, hosted service.",
+      "observable_behavior": "You describe a product; a working URL appears with code in a repo.",
+      "mechanism": "A planner decomposes the goal into a task backlog; an approval/autonomy gate promotes a task; a specialist agent works in a sandbox producing code + tests; a repo is created/updated; database and hosting are provisioned via authorized APIs; deployment yields a provider URL; logs and outcomes feed the next planning cycle.",
+      "traditional_counterfactual": "A PM writes a spec, eng builds, DevOps provisions and deploys — four handoffs across days.",
+      "autonomy_boundary": "Provider subdomains deploy automatically via pre-authorized accounts; custom domains, budget, and high-risk actions stay human-gated.",
+      "failure_mode": "A task can fail in the sandbox or at deploy; the system should surface the failure and hold the affected task rather than ship a broken build.",
+      "evidence": {
+        "urls": [
+          "https://github.com/AI-Builder-Club/open-polsia/blob/main/docs/architecture.md"
+        ],
+        "note": "Public reference-implementation analogue (planner, queue, sandbox, GitHub, Neon Postgres, Render, public URL) — not proof of the private stack.",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "id": "m2",
+      "learner_question": "What keeps an autonomous agent from taking unsafe actions?",
+      "product_promise": "Automation acts only through pre-authorized accounts and policies.",
+      "observable_behavior": "Tasks pause at an approval gate before high-risk steps.",
+      "mechanism": "Credentials, budgets, and permissions are scoped per integration; the autonomy gate promotes only tasks within policy.",
+      "traditional_counterfactual": "An engineer manually holds credentials and runs each privileged step by hand.",
+      "autonomy_boundary": "Routine actions are automated; anything touching money, custom domains, or production data requires explicit approval.",
+      "failure_mode": "An over-broad credential scope could let an agent act beyond intent; policy scoping is the control.",
+      "evidence": {
+        "urls": [
+          "https://www.anthropic.com/engineering/building-effective-agents"
+        ],
+        "note": "Canonical treatment of agent guardrails and human intervention.",
+        "confidence": "inferred"
+      }
+    },
+    {
+      "id": "m3",
+      "learner_question": "Is end-to-end autonomy actually reliable enough to trust?",
+      "product_promise": "The loop improves each cycle from tests, logs, and outcomes.",
+      "observable_behavior": "Failed tasks are retried or flagged; successful ones inform planning.",
+      "mechanism": "Test results, logs, and analytics are fed back into the next planning cycle.",
+      "traditional_counterfactual": "A team manually reviews CI and postmortems between releases.",
+      "autonomy_boundary": "The feedback loop is automated; the decision to trust it for high-stakes launches remains human.",
+      "failure_mode": "Silent quality regressions if evaluation signals are weak.",
+      "evidence": {
+        "urls": [],
+        "note": "No independent benchmark of reliability located for this early-stage product.",
+        "confidence": "unknown"
+      },
+      "high_impact": true
+    }
+  ]
+}

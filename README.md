@@ -29,7 +29,8 @@ The skill produces materials grounded in that product—not a generic “intro t
 | **Dynamic day summaries** | Each day’s “what today is about” reflects real session content |
 | **Curriculum map** | Table of modules with Focus lines derived from your session goals |
 | **“Coming up next”** | Preview of the next day at the bottom of each HTML page |
-| **Source diversity** | Draws from a 9-category credible-source taxonomy (academic, specs, journalism, courses, educational, independent blogs, video, hands-on, vendor); hard caps enforce ≥15 distinct domains, ≤2 sources/domain, and vendor ≤30% — verified by a blocking self-check before the curriculum renders |
+| **Mechanism-first** | Before any lesson, the skill builds a claim-backed **mechanism map** (3–5 claims, each labeled *confirmed / inferred / unknown*); Day 1 is an end-to-end trace of how the product turns input into its promised outcome — not generic AI theory |
+| **Source diversity** | Draws from a 9-category credible-source taxonomy (academic, specs, journalism, courses, educational, independent blogs, video, hands-on, vendor); hard caps enforce ≥15 distinct domains, ≤2 sources/domain, and a **claim-type-aware** vendor cap (≤30% of the "does-it-work" pool; product docs for "how-it-works" claims are exempt and required). Legal/pricing/home/README pages are **never** assigned as learner sources — the builder fails the build otherwise |
 | **Manifest + optional email** | `manifest.json` drives which day to open; macOS users can set up **daily SMTP email** (see `SKILL.md` Step 5.5) |
 | **Preferences you can change** | Full profile or delivery-only updates without regenerating everything by hand |
 
